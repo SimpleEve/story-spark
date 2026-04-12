@@ -146,7 +146,7 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     <section class="gallery-section">
       <div class="section-header">
         <h2>灵感画廊</h2>
-        <p class="gallery-desc">每次生成都是独特的，从不重复</p>
+        <p class="gallery-desc">每次生成都会刷新，5,120 种组合从不重复</p>
       </div>
       <div class="gallery-grid" id="galleryGrid">
         {gallery.map((item, i) => (
@@ -232,10 +232,13 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     const GENRES = JSON.parse(document.querySelector('.data-seed')?.dataset.genres || '[]');
     const SETTINGS = JSON.parse(document.querySelector('.data-seed')?.dataset.settings || '[]');
     const HOOKS = JSON.parse(document.querySelector('.data-seed')?.dataset.hooks || '[]');
-    const GALLERY_DATA = JSON.parse(document.querySelector('.data-seed')?.dataset.gallery || '[]');
 
     function pick(arr: any[]) {
       return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function makeKey(item: any) {
+      return `${item.char.name}|${item.genre.name}|${item.setting.name}|${item.hook}`;
     }
 
     function generate() {
@@ -248,10 +251,15 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     }
 
     let currentText = '';
-    let currentItem: ReturnType<typeof generate> | null = null;
+    const seen = new Set<string>();
 
     function render(item: ReturnType<typeof generate>) {
-      currentItem = item;
+      const key = makeKey(item);
+      // Avoid immediate repeat
+      if (seen.has(key)) return;
+      seen.add(key);
+      if (seen.size > 100) seen.clear(); // reset periodically
+
       currentText = `${item.char.name}，${item.setting.name}，${item.hook}。`;
 
       const premiseText = document.getElementById('premiseText')!;
@@ -271,17 +279,16 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       }, 120);
     }
 
-    // Regenerate gallery with real generated items
     function refreshGallery() {
-      const items = [generate(), generate(), generate()];
       const grid = document.getElementById('galleryGrid');
       if (!grid) return;
-      grid.innerHTML = items.map(item => `
-        <div class="gallery-item">
+      grid.innerHTML = [0, 1, 2].map(() => {
+        const item = generate();
+        return `<div class="gallery-item">
           <span class="gallery-genre" style="color: ${item.genre.color}">${item.genre.name}</span>
           <p>${item.char.name}，${item.setting.name}，${item.hook}。</p>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
     }
 
     document.getElementById('generateBtn')?.addEventListener('click', () => {
@@ -311,6 +318,16 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
         render({ char: pick(CHARACTERS), genre, setting: pick(SETTINGS), hook: pick(HOOKS) });
         refreshGallery();
       });
+    });
+
+    // Keyboard shortcut: Space or Enter to regenerate
+    document.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        if (document.activeElement?.tagName === 'BUTTON') return;
+        e.preventDefault();
+        render(generate());
+        refreshGallery();
+      }
     });
   </script>
 
