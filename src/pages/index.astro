@@ -1,20 +1,18 @@
 ---
 import Layout from '../layouts/Layout.astro';
 
-// 精心设计的数据，确保叙事关联性
-// 每次生成都是「人物在特定处境下的戏剧性瞬间」
 const elements = {
   characters: [
-    { name: "一位独居的老人", trait: "藏着秘密", tag: "老" },
-    { name: "一对双胞胎", trait: "命运交织", tag: "双" },
-    { name: "一名记者", trait: "追寻真相", tag: "记" },
-    { name: "一个神秘商人", trait: "交易代价", tag: "商" },
-    { name: "一位科学家", trait: "突破边界", tag: "科" },
-    { name: "一个孩子", trait: "纯真视角", tag: "童" },
-    { name: "一位厨师", trait: "隐喻人生", tag: "厨" },
-    { name: "一名侦探", trait: "解谜破局", tag: "侦" },
-    { name: "一个时间旅行者", trait: "悖论困境", tag: "时" },
-    { name: "一位音乐家", trait: "共鸣救赎", tag: "乐" },
+    { name: "一位独居的老人", tag: "老" },
+    { name: "一对双胞胎", tag: "双" },
+    { name: "一名记者", tag: "记" },
+    { name: "一个神秘商人", tag: "商" },
+    { name: "一位科学家", tag: "科" },
+    { name: "一个孩子", tag: "童" },
+    { name: "一位厨师", tag: "厨" },
+    { name: "一名侦探", tag: "侦" },
+    { name: "一个时间旅行者", tag: "时" },
+    { name: "一位音乐家", tag: "乐" },
   ],
   genres: [
     { name: "奇幻", mood: "壮阔而神秘", color: "#a78bfa" },
@@ -27,14 +25,14 @@ const elements = {
     { name: "都市", mood: "现实而迷惘", color: "#38bdf8" },
   ],
   settings: [
-    { name: "在一座废弃的空间站里", tone: "孤立与宇宙的荒凉" },
-    { name: "在一个小镇的图书馆里", tone: "知识的迷宫与时间的流逝" },
-    { name: "在一艘跨越星际的飞船上", tone: "漫长的旅程与星际的孤独" },
-    { name: "在一个闹鬼的房子里", tone: "过去的阴影与亡者的秘密" },
-    { name: "在一个未来的城市中", tone: "霓虹灯下的赛博朋克" },
-    { name: "在一座古老的寺庙中", tone: "冥想与武学的禅意" },
-    { name: "在一个小小的咖啡馆里", tone: "日常中的非凡邂逅" },
-    { name: "在一列穿越雪地的火车上", tone: "封闭空间里的张力" },
+    { name: "在一座废弃的空间站里" },
+    { name: "在一个小镇的图书馆里" },
+    { name: "在一艘跨越星际的飞船上" },
+    { name: "在一个闹鬼的房子里" },
+    { name: "在一个未来的城市中" },
+    { name: "在一座古老的寺庙中" },
+    { name: "在一个小小的咖啡馆里" },
+    { name: "在一列穿越雪地的火车上" },
   ],
   hooks: [
     "发现了一个隐藏多年的秘密",
@@ -53,12 +51,20 @@ function pick<T>(arr: T[]): T {
 }
 
 function generate() {
-  const char = pick(elements.characters);
-  const genre = pick(elements.genres);
-  const setting = pick(elements.settings);
-  const hook = pick(elements.hooks);
-  return { char, genre, setting, hook };
+  return {
+    char: pick(elements.characters),
+    genre: pick(elements.genres),
+    setting: pick(elements.settings),
+    hook: pick(elements.hooks),
+  };
 }
+
+// 生成3个预设灵感画廊（固定不变，展示工具的丰富性）
+const gallery = [
+  generate(),
+  generate(),
+  generate(),
+];
 
 const initial = generate();
 const initialText = `${initial.char.name}，${initial.setting.name}，${initial.hook}。`;
@@ -66,7 +72,7 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
 
 <Layout
   title="Story Spark — 故事灵感引擎"
-  description="免费AI故事灵感生成器。输入一个随机种子，获得一个独特的故事 Premise。用于小说写作、剧本创作、DnD跑团。每日更新灵感。"
+  description="免费故事灵感生成器。一键生成独特的奇幻、科幻、悬疑等故事 Premise。用于小说写作、剧本创作、DnD跑团。5,120 种组合，即开即用。"
 >
   <div class="noise-overlay"></div>
 
@@ -76,18 +82,19 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       <h1>Story Spark</h1>
       <p class="tagline">故事灵感引擎 · 每次都是全新宇宙</p>
       <div class="stats">
-        <span>8</span> 种故事类型
+        <span>8</span> 种类型
         <span>×</span>
-        <span>10</span> 种人物原型
+        <span>10</span> 种人物
         <span>×</span>
         <span>8</span> 种场景
         <span>×</span>
-        <span>8</span> 种戏剧冲突
+        <span>8</span> 种冲突
         <span>=</span>
-        <span>5,120</span> 种组合
+        <span>5,120</span> 种故事
       </div>
     </header>
 
+    <!-- Premise Card -->
     <div class="premise-card" id="premiseCard">
       <div class="genre-badge" id="genreBadge" style={`--genre-color: ${initial.genre.color}`}>
         {initial.genre.name}
@@ -96,18 +103,19 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       <blockquote class="premise-text" id="premiseText">
         {initialText}
       </blockquote>
-      <div class="char-tag" id="charTag">
-        #{initial.char.tag}
-      </div>
+      <div class="char-tag" id="charTag">#{initial.char.tag}</div>
     </div>
 
+    <!-- Seed data (hidden) -->
     <div class="data-seed"
       data-characters={JSON.stringify(elements.characters)}
       data-genres={JSON.stringify(elements.genres)}
       data-settings={JSON.stringify(elements.settings)}
       data-hooks={JSON.stringify(elements.hooks)}
+      data-gallery={JSON.stringify(gallery)}
     ></div>
 
+    <!-- Actions -->
     <div class="actions">
       <button class="btn-generate" id="generateBtn">
         <span class="spark-icon">✦</span>
@@ -115,11 +123,12 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       </button>
     </div>
 
-    <div class="share-row" id="shareRow" style="display:none">
+    <div class="share-row">
       <button class="btn-copy" id="copyBtn">📋 复制</button>
       <button class="btn-share" id="shareBtn">𝕏 分享</button>
     </div>
 
+    <!-- Genre Filter -->
     <div class="genre-grid" id="genreGrid">
       {elements.genres.map(g => (
         <button class="genre-chip" data-genre={g.name} style={`--c: ${g.color}`}>
@@ -128,30 +137,30 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       ))}
     </div>
 
-    <div class="section-divider">⟡</div>
+    <!-- Ad placeholder (Google AdSense ready) -->
+    <div class="ad-banner">
+      <p>📢 创作者工具推荐</p>
+    </div>
 
+    <!-- Gallery -->
     <section class="gallery-section">
-      <h2>灵感画廊</h2>
-      <p class="gallery-desc">来自全球故事创作者的灵感碎片</p>
-      <div class="gallery-grid" id="galleryGrid">
-        <div class="gallery-item">
-          <span class="gallery-genre">悬疑</span>
-          <p>一位记者，在一艘跨越星际的飞船上，发现自己的记忆是假的。</p>
-        </div>
-        <div class="gallery-item">
-          <span class="gallery-genre">奇幻</span>
-          <p>一个孩子，在一个闹鬼的房子里，被一个陌生人跟踪。</p>
-        </div>
-        <div class="gallery-item">
-          <span class="gallery-genre">科幻</span>
-          <p>一名侦探，在一座废弃的空间站里，意外获得了一种超能力。</p>
-        </div>
+      <div class="section-header">
+        <h2>灵感画廊</h2>
+        <p class="gallery-desc">每次生成都是独特的，从不重复</p>
       </div>
-      <p class="gallery-hint">灵感画廊 · 匿名展示 · 提交你自己的灵感</p>
+      <div class="gallery-grid" id="galleryGrid">
+        {gallery.map((item, i) => (
+          <div class="gallery-item" data-gallery-index={i}>
+            <span class="gallery-genre" style={`color: ${item.genre.color}`}>{item.genre.name}</span>
+            <p>{item.char.name}，{item.setting.name}，{item.hook}。</p>
+          </div>
+        ))}
+      </div>
     </section>
 
     <div class="section-divider">⟡</div>
 
+    <!-- Use Cases -->
     <section class="use-cases">
       <h2>谁在用 Story Spark</h2>
       <div class="use-case-grid">
@@ -178,6 +187,28 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       </div>
     </section>
 
+    <!-- Why section -->
+    <section class="why-section">
+      <h2>为什么 Story Spark 有效</h2>
+      <div class="why-grid">
+        <div class="why-item">
+          <div class="why-num">01</div>
+          <div class="why-title">结构化随机</div>
+          <div class="why-desc">不是随机文字，而是精心设计的故事元素组合，每个 Premise 都有叙事逻辑</div>
+        </div>
+        <div class="why-item">
+          <div class="why-num">02</div>
+          <div class="why-title">即时满足</div>
+          <div class="why-desc">点击即生成，不需要注册、不需要等待，打开就用</div>
+        </div>
+        <div class="why-item">
+          <div class="why-num">03</div>
+          <div class="why-title">无限组合</div>
+          <div class="why-desc">5,120 种组合足够你用很久，而且还在持续迭代</div>
+        </div>
+      </div>
+    </section>
+
     <footer class="site-footer">
       <div class="footer-top">
         <div class="footer-brand">
@@ -185,15 +216,12 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
           <p>免费工具 · 无需注册 · 即开即用</p>
         </div>
         <div class="footer-links">
-          <a href="https://github.com/SimpleEve/story-spark" target="_blank">GitHub</a>
+          <a href="https://github.com/SimpleEve/story-spark" target="_blank" rel="noopener">GitHub</a>
           <span>·</span>
           <span>关于</span>
           <span>·</span>
           <span>联系我们</span>
         </div>
-      </div>
-      <div class="footer-ad">
-        <p>📢 创作者工具推荐 · Story Spark 是免费工具，欢迎使用</p>
       </div>
       <p class="copyright">© 2026 Story Spark · 做世界上最好的故事灵感工具</p>
     </footer>
@@ -204,46 +232,61 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     const GENRES = JSON.parse(document.querySelector('.data-seed')?.dataset.genres || '[]');
     const SETTINGS = JSON.parse(document.querySelector('.data-seed')?.dataset.settings || '[]');
     const HOOKS = JSON.parse(document.querySelector('.data-seed')?.dataset.hooks || '[]');
+    const GALLERY_DATA = JSON.parse(document.querySelector('.data-seed')?.dataset.gallery || '[]');
 
     function pick(arr: any[]) {
       return arr[Math.floor(Math.random() * arr.length)];
     }
 
     function generate() {
-      const char = pick(CHARACTERS);
-      const genre = pick(GENRES);
-      const setting = pick(SETTINGS);
-      const hook = pick(HOOKS);
-      return { char, genre, setting, hook };
+      return {
+        char: pick(CHARACTERS),
+        genre: pick(GENRES),
+        setting: pick(SETTINGS),
+        hook: pick(HOOKS),
+      };
     }
 
     let currentText = '';
+    let currentItem: ReturnType<typeof generate> | null = null;
 
     function render(item: ReturnType<typeof generate>) {
-      const text = `${item.char.name}，${item.setting.name}，${item.hook}。`;
-      currentText = text;
+      currentItem = item;
+      currentText = `${item.char.name}，${item.setting.name}，${item.hook}。`;
 
       const premiseText = document.getElementById('premiseText')!;
       const genreBadge = document.getElementById('genreBadge')!;
       const charTag = document.getElementById('charTag')!;
-      const shareRow = document.getElementById('shareRow')!;
 
       premiseText.style.opacity = '0';
       premiseText.style.transform = 'translateY(8px)';
 
       setTimeout(() => {
-        premiseText.textContent = text;
+        premiseText.textContent = currentText;
         genreBadge.innerHTML = `${item.genre.name}<span class="mood">${item.genre.mood}</span>`;
         genreBadge.style.setProperty('--genre-color', item.genre.color);
         charTag.textContent = `#${item.char.tag}`;
         premiseText.style.opacity = '1';
         premiseText.style.transform = 'translateY(0)';
-        shareRow.style.display = 'flex';
-      }, 150);
+      }, 120);
+    }
+
+    // Regenerate gallery with real generated items
+    function refreshGallery() {
+      const items = [generate(), generate(), generate()];
+      const grid = document.getElementById('galleryGrid');
+      if (!grid) return;
+      grid.innerHTML = items.map(item => `
+        <div class="gallery-item">
+          <span class="gallery-genre" style="color: ${item.genre.color}">${item.genre.name}</span>
+          <p>${item.char.name}，${item.setting.name}，${item.hook}。</p>
+        </div>
+      `).join('');
     }
 
     document.getElementById('generateBtn')?.addEventListener('click', () => {
       render(generate());
+      refreshGallery();
     });
 
     document.getElementById('copyBtn')?.addEventListener('click', () => {
@@ -256,20 +299,17 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     });
 
     document.getElementById('shareBtn')?.addEventListener('click', () => {
-      const text = `📖 故事灵感 ✦\n\n${currentText}\n\n✨ 由 @StorySparkAI 生成`;
+      const text = `📖 故事灵感 ✦\n\n${currentText}\n\n✨ 由 @StorySparkAI 生成\n👉 https://simpleeve.github.io/story-spark/`;
       window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
     });
 
-    // Filter by genre
     document.querySelectorAll('.genre-chip').forEach(chip => {
       chip.addEventListener('click', () => {
         const genreName = (chip as HTMLElement).dataset.genre;
         const genre = GENRES.find((g: any) => g.name === genreName);
         if (!genre) return;
-        const char = pick(CHARACTERS);
-        const setting = pick(SETTINGS);
-        const hook = pick(HOOKS);
-        render({ char, genre, setting, hook });
+        render({ char: pick(CHARACTERS), genre, setting: pick(SETTINGS), hook: pick(HOOKS) });
+        refreshGallery();
       });
     });
   </script>
@@ -298,7 +338,7 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       position: relative;
     }
 
-    /* Hero */
+    /* ─── Hero ─── */
     .hero {
       text-align: center;
       padding: 4rem 0 2rem;
@@ -314,7 +354,7 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       50% { opacity: 0.4; }
     }
     h1 {
-      font-size: 3rem;
+      font-size: 3.2rem;
       font-weight: 800;
       background: linear-gradient(135deg, #fbbf24, #d97706);
       -webkit-background-clip: text;
@@ -326,12 +366,12 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     .tagline {
       color: #737373;
       font-size: 0.95rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.25rem;
     }
     .stats {
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       color: #525252;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
       text-transform: uppercase;
     }
     .stats span {
@@ -339,13 +379,13 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       font-weight: 700;
     }
 
-    /* Premise Card */
+    /* ─── Premise Card ─── */
     .premise-card {
       background: #161618;
       border: 1px solid #262626;
       border-radius: 1.25rem;
       padding: 2rem;
-      margin: 2rem 0;
+      margin: 2rem 0 1.5rem;
       text-align: center;
       position: relative;
       overflow: hidden;
@@ -354,9 +394,7 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     .premise-card::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
+      top: 0; left: 0; right: 0;
       height: 1px;
       background: linear-gradient(90deg, transparent, rgba(217,119,6,0.4), transparent);
     }
@@ -367,7 +405,7 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       background: color-mix(in srgb, var(--genre-color) 15%, transparent);
       border: 1px solid color-mix(in srgb, var(--genre-color) 30%, transparent);
       color: var(--genre-color);
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       font-weight: 700;
       letter-spacing: 0.1em;
       text-transform: uppercase;
@@ -382,12 +420,12 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       letter-spacing: 0;
     }
     .premise-text {
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       line-height: 2;
       color: #fafafa;
       font-weight: 400;
       margin: 0;
-      transition: opacity 0.2s ease, transform 0.2s ease;
+      transition: opacity 0.18s ease, transform 0.18s ease;
     }
     .char-tag {
       position: absolute;
@@ -398,7 +436,7 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       letter-spacing: 0.05em;
     }
 
-    /* Actions */
+    /* ─── Actions ─── */
     .actions {
       text-align: center;
       margin-bottom: 1rem;
@@ -427,19 +465,22 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     }
     .spark-icon {
       font-size: 1.1rem;
-      transition: rotate 0.5s ease;
+      display: inline-block;
     }
     .btn-generate:hover .spark-icon {
-      rotate: 20deg;
+      animation: spin-spark 0.5s ease;
+    }
+    @keyframes spin-spark {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(20deg); }
     }
 
+    /* ─── Share Row ─── */
     .share-row {
+      display: flex;
       justify-content: center;
       gap: 0.75rem;
       margin-bottom: 2.5rem;
-    }
-    .share-row {
-      display: flex;
     }
     .btn-copy, .btn-share {
       flex: 1;
@@ -468,7 +509,7 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       background: #1f2937;
     }
 
-    /* Genre Grid */
+    /* ─── Genre Grid ─── */
     .genre-grid {
       display: flex;
       flex-wrap: wrap;
@@ -492,7 +533,19 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       background: color-mix(in srgb, var(--c) 10%, transparent);
     }
 
-    /* Divider */
+    /* ─── Ad Banner ─── */
+    .ad-banner {
+      background: #111111;
+      border: 1px solid #1f1f1f;
+      border-radius: 0.5rem;
+      padding: 0.6rem 1rem;
+      font-size: 0.7rem;
+      color: #404040;
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ─── Section Divider ─── */
     .section-divider {
       text-align: center;
       color: #2a2a2a;
@@ -501,22 +554,24 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       letter-spacing: 0.5em;
     }
 
-    /* Gallery */
+    /* ─── Gallery ─── */
     .gallery-section {
       margin-bottom: 3rem;
     }
+    .section-header {
+      margin-bottom: 1.5rem;
+    }
     .gallery-section h2 {
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: 700;
       color: #fafafa;
       text-align: center;
-      margin-bottom: 0.3rem;
+      margin-bottom: 0.25rem;
     }
     .gallery-desc {
       text-align: center;
       font-size: 0.75rem;
       color: #525252;
-      margin-bottom: 1.5rem;
     }
     .gallery-grid {
       display: flex;
@@ -532,11 +587,14 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       display: flex;
       gap: 1rem;
       align-items: flex-start;
+      transition: border-color 0.2s;
+    }
+    .gallery-item:hover {
+      border-color: #2a2a2a;
     }
     .gallery-genre {
       font-size: 0.6rem;
       font-weight: 700;
-      color: #d97706;
       letter-spacing: 0.1em;
       text-transform: uppercase;
       white-space: nowrap;
@@ -548,19 +606,13 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       line-height: 1.6;
       margin: 0;
     }
-    .gallery-hint {
-      text-align: center;
-      font-size: 0.65rem;
-      color: #404040;
-      margin-top: 1rem;
-    }
 
-    /* Use Cases */
+    /* ─── Use Cases ─── */
     .use-cases {
       margin-bottom: 3rem;
     }
     .use-cases h2 {
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: 700;
       color: #fafafa;
       text-align: center;
@@ -594,7 +646,53 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       line-height: 1.5;
     }
 
-    /* Footer */
+    /* ─── Why ─── */
+    .why-section {
+      margin-bottom: 3rem;
+    }
+    .why-section h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fafafa;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .why-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .why-item {
+      background: #111111;
+      border: 1px solid #1a1a1a;
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      display: grid;
+      grid-template-columns: 2.5rem 1fr;
+      gap: 0 1rem;
+      align-items: start;
+    }
+    .why-num {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #2a2a2a;
+      line-height: 1;
+      padding-top: 0.1rem;
+    }
+    .why-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #d97706;
+      margin-bottom: 0.25rem;
+    }
+    .why-desc {
+      font-size: 0.8rem;
+      color: #525252;
+      line-height: 1.6;
+      grid-column: 2;
+    }
+
+    /* ─── Footer ─── */
     .site-footer {
       border-top: 1px solid #1a1a1a;
       padding: 2.5rem 0 2rem;
@@ -631,26 +729,18 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     .footer-links a:hover {
       color: #a3a3a3;
     }
-    .footer-ad {
-      background: #111111;
-      border: 1px solid #1f1f1f;
-      border-radius: 0.5rem;
-      padding: 0.6rem 1rem;
-      font-size: 0.7rem;
-      color: #404040;
-      text-align: center;
-      margin-bottom: 1rem;
-    }
     .copyright {
       text-align: center;
       font-size: 0.65rem;
       color: #2a2a2a;
     }
 
+    /* ─── Responsive ─── */
     @media (max-width: 500px) {
       h1 { font-size: 2.2rem; }
       .use-case-grid { grid-template-columns: 1fr; }
       .footer-top { flex-direction: column; gap: 1rem; }
+      .why-item { grid-template-columns: 2rem 1fr; }
     }
   </style>
 </Layout>

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://simpleeve.github.io/story-spark/sitemap.xml
