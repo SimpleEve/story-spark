@@ -1,0 +1,16 @@
+{
+  "name": "Story Spark",
+  "short_name": "Story Spark",
+  "description": "免费故事灵感生成器。5,120种故事组合，用于小说写作、剧本创作、DnD跑团。",
+  "start_url": "/story-spark/",
+  "display": "standalone",
+  "background_color": "#0c0c0e",
+  "theme_color": "#d97706",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

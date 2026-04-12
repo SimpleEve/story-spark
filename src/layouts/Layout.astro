@@ -25,7 +25,47 @@ const { title, description } = Astro.props;
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#d97706" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>{title}</title>
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Story Spark",
+      "description": "免费故事灵感生成器，一键生成独特的奇幻、科幻、悬疑等故事Premise",
+      "url": "https://simpleeve.github.io/story-spark/",
+      "applicationCategory": "DesignApplication,CreativeWorkApplication",
+      "operatingSystem": "Web Browser",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Story Spark 是免费的吗？",
+          "acceptedAnswer": { "@type": "Answer", "text": "是的，Story Spark 完全免费，无需注册，即开即用。" }
+        },
+        {
+          "@type": "Question",
+          "name": "Story Spark 生成的灵感可以用来写小说吗？",
+          "acceptedAnswer": { "@type": "Answer", "text": "当然可以。Story Spark 生成的是故事 Premise，可以基于此扩展成完整的小说、剧本或游戏剧情。" }
+        },
+        {
+          "@type": "Question",
+          "name": "DnD 跑团可以用 Story Spark 吗？",
+          "acceptedAnswer": { "@type": "Answer", "text": "完全可以。Story Spark 的情境设定非常适合作为 DnD 跑团的情节灵感，帮助 DM 快速构建场景。" }
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <slot />
