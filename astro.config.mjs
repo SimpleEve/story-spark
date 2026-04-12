@@ -1,7 +1,7 @@
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
-  site: 'https://SimpleEve.github.io',
-  base: '/story-spark',
+  site: 'https://simpleeve.github.io/story-spark',
+  base: '/',
   output: 'static',
 });
