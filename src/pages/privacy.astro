@@ -1,0 +1,153 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="隐私政策 | Story Spark"
+  description="Story Spark 隐私政策。我们不收集个人数据，不使用追踪 Cookie。"
+>
+  <div class="noise-overlay"></div>
+  <main>
+    <header class="hero">
+      <div class="logo-mark">✦</div>
+      <h1>隐私政策</h1>
+      <p class="date">最后更新：2026 年 4 月 12 日</p>
+    </header>
+
+    <div class="content">
+      <section>
+        <h2>我们收集什么</h2>
+        <p>Story Spark 是完全的前端工具。我们不会收集、存储或分享任何个人数据。</p>
+        <p>当您点击「生成新灵感」时，所有处理均在您的浏览器本地完成，不会发送任何数据到服务器。</p>
+      </section>
+
+      <section>
+        <h2>Cookie</h2>
+        <p>我们不使用任何 Cookie 或追踪技术。</p>
+      </section>
+
+      <section>
+        <h2>第三方服务</h2>
+        <p>我们的网站可能使用以下第三方服务：</p>
+        <ul>
+          <li><strong>GitHub Pages</strong> — 网站托管服务商</li>
+          <li><strong>Google AdSense</strong> — 广告服务（未来可能启用）</li>
+        </ul>
+        <p>这些第三方服务有其各自的隐私政策。</p>
+      </section>
+
+      <section>
+        <h2>广告</h2>
+        <p>我们未来可能在网站上展示由 Google AdSense 提供的广告。Google 可能使用 Cookie 根据您的兴趣展示广告。您可以通过访问 <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener">Google 广告设置</a>来管理或禁用个性化广告。</p>
+      </section>
+
+      <section>
+        <h2>儿童隐私</h2>
+        <p>我们的服务不面向 13 岁以下儿童，我们不会故意收集儿童的个人信息。</p>
+      </section>
+
+      <section>
+        <h2>联系我们</h2>
+        <p>如果您对本隐私政策有任何疑问，请通过 GitHub 仓库联系我们：</p>
+        <p><a href="https://github.com/SimpleEve/story-spark" target="_blank" rel="noopener">github.com/SimpleEve/story-spark</a></p>
+      </section>
+    </div>
+
+    <div class="back-link">
+      <a href="/story-spark/">← 返回 Story Spark</a>
+    </div>
+  </main>
+
+  <style>
+    :global(body) {
+      background: #0c0c0e;
+      color: #e5e5e5;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .noise-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+    main {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+    .hero {
+      text-align: center;
+      padding: 4rem 0 2rem;
+    }
+    .logo-mark {
+      font-size: 2rem;
+      color: #d97706;
+      margin-bottom: 0.5rem;
+    }
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fbbf24, #d97706);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+    .date {
+      color: #525252;
+      font-size: 0.8rem;
+    }
+    .content {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    section {
+      margin-bottom: 2.5rem;
+    }
+    h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #d97706;
+      margin-bottom: 0.75rem;
+    }
+    p {
+      color: #a3a3a3;
+      font-size: 0.9rem;
+      line-height: 1.8;
+      margin-bottom: 0.75rem;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      color: #a3a3a3;
+      font-size: 0.9rem;
+      line-height: 1.8;
+      padding: 0.25rem 0;
+    }
+    a {
+      color: #60a5fa;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .back-link {
+      text-align: center;
+      padding: 3rem 0;
+    }
+    .back-link a {
+      color: #525252;
+      font-size: 0.85rem;
+      transition: color 0.2s;
+    }
+    .back-link a:hover {
+      color: #a3a3a3;
+      text-decoration: none;
+    }
+  </style>
+</Layout>
