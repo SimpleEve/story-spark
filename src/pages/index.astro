@@ -59,7 +59,7 @@ function generate() {
   };
 }
 
-// 生成3个预设灵感画廊（固定不变，展示工具的丰富性）
+// Generate 3 gallery items (fixed, show richness)
 const gallery = [
   generate(),
   generate(),
@@ -74,80 +74,89 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
   title="Story Spark — 故事灵感引擎"
   description="免费故事灵感生成器。一键生成独特的奇幻、科幻、悬疑等故事 Premise。用于小说写作、剧本创作、DnD跑团。5,120 种组合，即开即用，完全免费。"
 >
-  <div class="noise-overlay"></div>
-
   <main>
+    <!-- HERO -->
     <header class="hero">
-      <div class="logo-mark">✦</div>
-      <h1>Story Spark</h1>
-      <p class="tagline">故事灵感引擎 · 每次都是全新宇宙</p>
-      <div class="stats">
-        <span>8</span> 种类型
-        <span>×</span>
-        <span>10</span> 种人物
-        <span>×</span>
-        <span>8</span> 种场景
-        <span>×</span>
-        <span>8</span> 种冲突
-        <span>=</span>
-        <span>5,120</span> 种故事
+      <div class="hero-eyebrow">CREATIVE WRITING TOOL</div>
+      <h1 class="hero-title">STORY<br/>SPARK</h1>
+      <p class="hero-sub">故事灵感引擎 · 每次都是全新宇宙</p>
+      <div class="hero-stats">
+        <span class="stat-num">8</span><span class="stat-label">类型</span>
+        <span class="stat-sep">×</span>
+        <span class="stat-num">10</span><span class="stat-label">人物</span>
+        <span class="stat-sep">×</span>
+        <span class="stat-num">8</span><span class="stat-label">场景</span>
+        <span class="stat-sep">×</span>
+        <span class="stat-num">8</span><span class="stat-label">冲突</span>
+        <span class="stat-sep">=</span>
+        <span class="stat-num accent">5,120</span>
       </div>
     </header>
 
-    <!-- Premise Card -->
-    <div class="premise-card" id="premiseCard">
-      <div class="genre-badge" id="genreBadge" style={`--genre-color: ${initial.genre.color}`}>
-        {initial.genre.name}
-        <span class="mood">{initial.genre.mood}</span>
+    <!-- PREMISE CARD -->
+    <div class="premise-block">
+      <div class="premise-card" id="premiseCard">
+        <div class="premise-card-inner">
+          <div class="premise-top">
+            <div class="genre-badge" id="genreBadge" style={`--gc: ${initial.genre.color}`}>
+              <span class="genre-name">{initial.genre.name}</span>
+              <span class="genre-sep">/</span>
+              <span class="genre-mood">{initial.genre.mood}</span>
+            </div>
+            <div class="char-tag" id="charTag">#{initial.char.tag}</div>
+          </div>
+          <blockquote class="premise-text" id="premiseText">
+            {initialText}
+          </blockquote>
+        </div>
       </div>
-      <blockquote class="premise-text" id="premiseText">
-        {initialText}
-      </blockquote>
-      <div class="char-tag" id="charTag">#{initial.char.tag}</div>
+
+      <!-- Seed data (hidden) -->
+      <div class="data-seed"
+        data-characters={JSON.stringify(elements.characters)}
+        data-genres={JSON.stringify(elements.genres)}
+        data-settings={JSON.stringify(elements.settings)}
+        data-hooks={JSON.stringify(elements.hooks)}
+        data-gallery={JSON.stringify(gallery)}
+      ></div>
+
+      <!-- ACTIONS -->
+      <div class="actions-row">
+        <button class="btn-generate" id="generateBtn">
+          <span class="btn-icon">✦</span>
+          <span>生成新灵感</span>
+        </button>
+      </div>
+
+      <div class="share-row">
+        <button class="btn-copy" id="copyBtn">
+          <span class="btn-icon-sm">📋</span>复制
+        </button>
+        <button class="btn-share" id="shareBtn">
+          <span class="btn-icon-sm">𝕏</span>分享
+        </button>
+      </div>
+
+      <!-- Keyboard hint -->
+      <div class="kb-hint">按 <kbd>SPACE</kbd> 或 <kbd>ENTER</kbd> 快速生成</div>
     </div>
 
-    <!-- Seed data (hidden) -->
-    <div class="data-seed"
-      data-characters={JSON.stringify(elements.characters)}
-      data-genres={JSON.stringify(elements.genres)}
-      data-settings={JSON.stringify(elements.settings)}
-      data-hooks={JSON.stringify(elements.hooks)}
-      data-gallery={JSON.stringify(gallery)}
-    ></div>
-
-    <!-- Actions -->
-    <div class="actions">
-      <button class="btn-generate" id="generateBtn">
-        <span class="spark-icon">✦</span>
-        生成新灵感
-      </button>
-    </div>
-
-    <div class="share-row">
-      <button class="btn-copy" id="copyBtn">📋 复制</button>
-      <button class="btn-share" id="shareBtn">𝕏 分享</button>
-    </div>
-
-    <!-- Genre Filter -->
+    <!-- GENRE FILTER -->
+    <div class="section-label">筛选类型</div>
     <div class="genre-grid" id="genreGrid">
       {elements.genres.map(g => (
-        <button class="genre-chip" data-genre={g.name} style={`--c: ${g.color}`}>
+        <button class="genre-chip" data-genre={g.name} style={`--gc: ${g.color}`}>
           {g.name}
         </button>
       ))}
     </div>
 
-    <!-- Ad placeholder (Google AdSense ready) -->
-    <div class="ad-banner">
-      <p>📢 创作者工具推荐</p>
-    </div>
+    <div class="rule"></div>
 
-    <!-- Gallery -->
+    <!-- GALLERY -->
     <section class="gallery-section">
-      <div class="section-header">
-        <h2>灵感画廊</h2>
-        <p class="gallery-desc">每次生成都会刷新，5,120 种组合从不重复</p>
-      </div>
+      <div class="section-label">灵感画廊</div>
+      <p class="section-desc">5,120 种组合，每次刷新都不一样</p>
       <div class="gallery-grid" id="galleryGrid">
         {gallery.map((item, i) => (
           <div class="gallery-item" data-gallery-index={i}>
@@ -158,11 +167,11 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       </div>
     </section>
 
-    <div class="section-divider">⟡</div>
+    <div class="rule"></div>
 
-    <!-- Use Cases -->
+    <!-- USE CASES -->
     <section class="use-cases">
-      <h2>谁在用 Story Spark</h2>
+      <div class="section-label">谁在用</div>
       <div class="use-case-grid">
         <div class="use-case">
           <div class="uc-icon">📖</div>
@@ -187,41 +196,50 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       </div>
     </section>
 
-    <!-- Why section -->
+    <div class="rule"></div>
+
+    <!-- WHY -->
     <section class="why-section">
-      <h2>为什么 Story Spark 有效</h2>
+      <div class="section-label">为什么有效</div>
       <div class="why-grid">
         <div class="why-item">
           <div class="why-num">01</div>
-          <div class="why-title">结构化随机</div>
-          <div class="why-desc">不是随机文字，而是精心设计的故事元素组合，每个 Premise 都有叙事逻辑</div>
+          <div class="why-body">
+            <div class="why-title">结构化随机</div>
+            <div class="why-desc">不是随机文字，而是精心设计的故事元素组合，每个 Premise 都有叙事逻辑</div>
+          </div>
         </div>
         <div class="why-item">
           <div class="why-num">02</div>
-          <div class="why-title">即时满足</div>
-          <div class="why-desc">点击即生成，不需要注册、不需要等待，打开就用</div>
+          <div class="why-body">
+            <div class="why-title">即时满足</div>
+            <div class="why-desc">点击即生成，不需要注册、不需要等待，打开就用</div>
+          </div>
         </div>
         <div class="why-item">
           <div class="why-num">03</div>
-          <div class="why-title">无限组合</div>
-          <div class="why-desc">5,120 种组合足够你用很久，而且还在持续迭代</div>
+          <div class="why-body">
+            <div class="why-title">无限组合</div>
+            <div class="why-desc">5,120 种组合足够你用很久，而且还在持续迭代</div>
+          </div>
         </div>
       </div>
     </section>
 
+    <!-- FOOTER -->
     <footer class="site-footer">
-      <div class="footer-top">
+      <div class="footer-inner">
         <div class="footer-brand">
-          <span class="footer-logo">✦ Story Spark</span>
+          <span class="footer-logo">✦ STORY SPARK</span>
           <p>免费工具 · 无需注册 · 即开即用</p>
         </div>
         <div class="footer-links">
           <a href="https://github.com/SimpleEve/story-spark" target="_blank" rel="noopener">GitHub</a>
-          <span>·</span>
+          <span class="footer-dot">·</span>
           <a href="/story-spark/privacy">隐私政策</a>
         </div>
       </div>
-      <p class="copyright">© 2026 Story Spark · 做世界上最好的故事灵感工具</p>
+      <div class="footer-copy">© 2026 Story Spark · 做世界上最好的故事灵感工具</div>
     </footer>
   </main>
 
@@ -253,10 +271,9 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
 
     function render(item: ReturnType<typeof generate>) {
       const key = makeKey(item);
-      // Avoid immediate repeat
       if (seen.has(key)) return;
       seen.add(key);
-      if (seen.size > 100) seen.clear(); // reset periodically
+      if (seen.size > 100) seen.clear();
 
       currentText = `${item.char.name}，${item.setting.name}，${item.hook}。`;
 
@@ -265,16 +282,16 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       const charTag = document.getElementById('charTag')!;
 
       premiseText.style.opacity = '0';
-      premiseText.style.transform = 'translateY(8px)';
+      premiseText.style.transform = 'translateY(10px)';
 
       setTimeout(() => {
         premiseText.textContent = currentText;
-        genreBadge.innerHTML = `${item.genre.name}<span class="mood">${item.genre.mood}</span>`;
-        genreBadge.style.setProperty('--genre-color', item.genre.color);
+        genreBadge.innerHTML = `<span class="genre-name">${item.genre.name}</span><span class="genre-sep">/</span><span class="genre-mood">${item.genre.mood}</span>`;
+        genreBadge.style.setProperty('--gc', item.genre.color);
         charTag.textContent = `#${item.char.tag}`;
         premiseText.style.opacity = '1';
         premiseText.style.transform = 'translateY(0)';
-      }, 120);
+      }, 150);
     }
 
     function refreshGallery() {
@@ -299,7 +316,7 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       navigator.clipboard.writeText(text).then(() => {
         const btn = document.getElementById('copyBtn')!;
         btn.textContent = '✅ 已复制';
-        setTimeout(() => btn.textContent = '📋 复制', 1500);
+        setTimeout(() => btn.innerHTML = '<span class="btn-icon-sm">📋</span>复制', 1500);
       });
     });
 
@@ -330,432 +347,645 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
   </script>
 
   <style>
-    :global(body) {
-      background: #0c0c0e;
-      color: #e5e5e5;
-      min-height: 100vh;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    /* ═══════════════════════════════════════════
+       MISTRAL DESIGN TOKENS — WARM GOLDEN UNIVERSE
+    ═══════════════════════════════════════════ */
+    :root {
+      --yellow: #ffd900;
+      --amber: #ffa110;
+      --orange: #fa520f;
+      --cream: #fffaeb;
+      --cream-mid: #fff3cc;
+      --dark-bg: #1a1206;
+      --dark-surface: #241a08;
+      --dark-elevated: #2e2009;
+      --warm-shadow: rgba(127, 99, 21, 0.18);
+      --warm-shadow-strong: rgba(127, 99, 21, 0.35);
+      --text-primary: #fff8e8;
+      --text-secondary: #c9a455;
+      --text-muted: #7a5e20;
+      --font: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
     }
 
-    .noise-overlay {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 100;
-      opacity: 0.025;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    :global(*) {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :global(html) {
+      scroll-behavior: smooth;
+    }
+
+    :global(body) {
+      background: var(--dark-bg);
+      color: var(--text-primary);
+      font-family: var(--font);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Warm golden scrollbar */
+    :global(::-webkit-scrollbar) {
+      width: 6px;
+    }
+    :global(::-webkit-scrollbar-track) {
+      background: var(--dark-bg);
+    }
+    :global(::-webkit-scrollbar-thumb) {
+      background: var(--amber);
+      border-radius: 0;
     }
 
     main {
-      max-width: 700px;
+      max-width: 680px;
       margin: 0 auto;
       padding: 0 1.5rem;
-      position: relative;
     }
 
-    /* ─── Hero ─── */
+    /* ═══════════════════════════════════════════
+       TYPOGRAPHY — MISTRAL STYLE
+       Massive display headlines, negative tracking
+    ═══════════════════════════════════════════ */
     .hero {
+      padding: 5rem 0 3rem;
       text-align: center;
-      padding: 4rem 0 2rem;
     }
-    .logo-mark {
-      font-size: 2rem;
-      color: #d97706;
-      margin-bottom: 0.5rem;
-      animation: pulse 3s ease-in-out infinite;
+
+    .hero-eyebrow {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 1.25rem;
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-    h1 {
-      font-size: 3.2rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, #fbbf24, #d97706);
+
+    .hero-title {
+      font-size: clamp(4rem, 14vw, 6.5rem);
+      font-weight: 900;
+      line-height: 0.9;
+      letter-spacing: -0.04em;
+      text-transform: uppercase;
+      background: linear-gradient(165deg, var(--yellow) 0%, var(--amber) 40%, var(--orange) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      letter-spacing: -0.02em;
-      margin-bottom: 0.5rem;
-    }
-    .tagline {
-      color: #737373;
-      font-size: 0.95rem;
-      margin-bottom: 1.25rem;
-    }
-    .stats {
-      font-size: 0.68rem;
-      color: #525252;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-    .stats span {
-      color: #d97706;
-      font-weight: 700;
+      margin-bottom: 1.5rem;
     }
 
-    /* ─── Premise Card ─── */
-    .premise-card {
-      background: #161618;
-      border: 1px solid #262626;
-      border-radius: 1.25rem;
-      padding: 2rem;
-      margin: 2rem 0 1.5rem;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 0 60px rgba(217,119,6,0.06);
+    .hero-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      letter-spacing: 0.12em;
+      margin-bottom: 2.5rem;
     }
+
+    .hero-stats {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .stat-num {
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: var(--text-secondary);
+      letter-spacing: -0.02em;
+    }
+
+    .stat-num.accent {
+      color: var(--yellow);
+      font-size: 1.3rem;
+    }
+
+    .stat-label {
+      color: var(--text-muted);
+    }
+
+    .stat-sep {
+      color: var(--warm-shadow-strong);
+      font-weight: 300;
+    }
+
+    /* ═══════════════════════════════════════════
+       SECTION LABELS — uppercase, tracked out
+    ═══════════════════════════════════════════ */
+    .section-label {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 1rem;
+    }
+
+    .section-desc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      margin-top: -0.5rem;
+      letter-spacing: 0.04em;
+    }
+
+    /* ═══════════════════════════════════════════
+       PREMISE BLOCK
+    ═══════════════════════════════════════════ */
+    .premise-block {
+      margin-bottom: 3rem;
+    }
+
+    .premise-card {
+      background: var(--dark-surface);
+      border: 1px solid rgba(127, 99, 21, 0.25);
+      border-radius: 0;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+      position: relative;
+      box-shadow:
+        0 4px 24px var(--warm-shadow),
+        0 1px 0 0 rgba(255, 217, 0, 0.06) inset;
+    }
+
+    /* Top accent line */
     .premise-card::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(217,119,6,0.4), transparent);
+      height: 2px;
+      background: linear-gradient(90deg, var(--yellow), var(--amber), var(--orange));
     }
+
+    .premise-card-inner {
+      padding: 2rem 1.75rem 1.75rem;
+    }
+
+    .premise-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.25rem;
+    }
+
     .genre-badge {
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-      background: color-mix(in srgb, var(--genre-color) 15%, transparent);
-      border: 1px solid color-mix(in srgb, var(--genre-color) 30%, transparent);
-      color: var(--genre-color);
-      font-size: 0.68rem;
+      gap: 0.4rem;
+      font-size: 0.62rem;
       font-weight: 700;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      padding: 0.3rem 0.8rem;
-      border-radius: 9999px;
-      margin-bottom: 1.25rem;
+      padding: 0.3rem 0.7rem;
+      border: 1px solid rgba(255, 217, 0, 0.2);
+      background: rgba(255, 217, 0, 0.04);
+      color: var(--gc, var(--amber));
+      border-radius: 0;
     }
-    .genre-badge .mood {
-      color: #737373;
+
+    .genre-sep {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .genre-mood {
+      color: var(--text-muted);
       font-weight: 400;
       text-transform: none;
       letter-spacing: 0;
     }
-    .premise-text {
-      font-size: 1.1rem;
-      line-height: 2;
-      color: #fafafa;
-      font-weight: 400;
-      margin: 0;
-      transition: opacity 0.18s ease, transform 0.18s ease;
-    }
+
     .char-tag {
-      position: absolute;
-      top: 1rem;
-      right: 1.25rem;
-      font-size: 0.65rem;
-      color: #404040;
-      letter-spacing: 0.05em;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      padding-top: 0.2rem;
     }
 
-    /* ─── Actions ─── */
-    .actions {
+    .premise-text {
+      font-size: 1.15rem;
+      line-height: 2;
+      color: var(--text-primary);
+      font-weight: 400;
+      letter-spacing: 0.01em;
+      margin: 0;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    /* ═══════════════════════════════════════════
+       ACTIONS ROW
+    ═══════════════════════════════════════════ */
+    .actions-row {
       text-align: center;
       margin-bottom: 1rem;
     }
+
     .btn-generate {
-      background: linear-gradient(135deg, #d97706, #b45309);
-      color: white;
-      font-size: 1rem;
-      font-weight: 700;
-      padding: 0.9rem 2.8rem;
-      border: none;
-      border-radius: 9999px;
-      cursor: pointer;
-      box-shadow: 0 0 30px rgba(217,119,6,0.25);
-      transition: all 0.25s ease;
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.6rem;
+      background: linear-gradient(135deg, var(--amber) 0%, var(--orange) 100%);
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 1rem 2.5rem;
+      border: none;
+      border-radius: 0;
+      cursor: pointer;
+      box-shadow:
+        0 4px 20px var(--warm-shadow-strong),
+        0 0 0 1px rgba(255, 217, 0, 0.15);
+      transition: all 0.2s ease;
     }
+
     .btn-generate:hover {
-      transform: translateY(-2px) scale(1.03);
-      box-shadow: 0 0 45px rgba(217,119,6,0.4);
+      transform: translateY(-2px);
+      box-shadow:
+        0 8px 32px var(--warm-shadow-strong),
+        0 0 0 1px rgba(255, 217, 0, 0.3);
     }
+
     .btn-generate:active {
       transform: scale(0.97);
     }
-    .spark-icon {
-      font-size: 1.1rem;
-      display: inline-block;
-    }
-    .btn-generate:hover .spark-icon {
-      animation: spin-spark 0.5s ease;
-    }
-    @keyframes spin-spark {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(20deg); }
+
+    .btn-icon {
+      font-size: 1rem;
     }
 
-    /* ─── Share Row ─── */
+    .btn-generate:hover .btn-icon {
+      animation: spin-spark 0.4s ease;
+    }
+
+    @keyframes spin-spark {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(15deg); }
+    }
+
+    /* ═══════════════════════════════════════════
+       SHARE ROW
+    ═══════════════════════════════════════════ */
     .share-row {
       display: flex;
       justify-content: center;
       gap: 0.75rem;
-      margin-bottom: 2.5rem;
-    }
-    .btn-copy, .btn-share {
-      flex: 1;
-      max-width: 160px;
-      padding: 0.6rem 1rem;
-      border-radius: 0.75rem;
-      font-weight: 600;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      border: 1px solid #262626;
-    }
-    .btn-copy {
-      background: #1a1a1a;
-      color: #a3a3a3;
-    }
-    .btn-copy:hover {
-      background: #262626;
-      color: #e5e5e5;
-    }
-    .btn-share {
-      background: #111827;
-      color: white;
-    }
-    .btn-share:hover {
-      background: #1f2937;
+      margin-bottom: 1rem;
     }
 
-    /* ─── Genre Grid ─── */
+    .btn-copy, .btn-share {
+      flex: 1;
+      max-width: 140px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.65rem 1rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      border-radius: 0;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      border: 1px solid rgba(127, 99, 21, 0.3);
+      background: var(--dark-surface);
+      color: var(--text-secondary);
+    }
+
+    .btn-copy:hover, .btn-share:hover {
+      background: var(--dark-elevated);
+      border-color: rgba(255, 161, 16, 0.5);
+      color: var(--yellow);
+    }
+
+    .btn-share:hover {
+      border-color: rgba(255, 217, 0, 0.5);
+    }
+
+    .btn-icon-sm {
+      font-size: 0.85rem;
+    }
+
+    .kb-hint {
+      text-align: center;
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      margin-bottom: 2.5rem;
+    }
+
+    kbd {
+      display: inline-block;
+      background: var(--dark-elevated);
+      border: 1px solid rgba(127, 99, 21, 0.3);
+      border-radius: 0;
+      padding: 0.1rem 0.4rem;
+      font-family: var(--font);
+      font-size: 0.58rem;
+      color: var(--text-secondary);
+    }
+
+    /* ═══════════════════════════════════════════
+       GENRE GRID
+    ═══════════════════════════════════════════ */
     .genre-grid {
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
-      justify-content: center;
-      margin-bottom: 2.5rem;
+      margin-bottom: 3rem;
     }
+
     .genre-chip {
       background: transparent;
-      border: 1px solid #262626;
-      color: #737373;
-      border-radius: 9999px;
-      padding: 0.3rem 0.9rem;
-      font-size: 0.75rem;
+      border: 1px solid rgba(127, 99, 21, 0.25);
+      color: var(--text-muted);
+      border-radius: 0;
+      padding: 0.35rem 0.9rem;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.18s ease;
     }
+
     .genre-chip:hover {
-      border-color: var(--c);
-      color: var(--c);
-      background: color-mix(in srgb, var(--c) 10%, transparent);
+      border-color: var(--gc, var(--amber));
+      color: var(--gc, var(--amber));
+      background: color-mix(in srgb, var(--gc, var(--amber)) 8%, transparent);
     }
 
-    /* ─── Ad Banner ─── */
-    .ad-banner {
-      background: #111111;
-      border: 1px solid #1f1f1f;
-      border-radius: 0.5rem;
-      padding: 0.6rem 1rem;
-      font-size: 0.7rem;
-      color: #404040;
-      text-align: center;
-      margin-bottom: 2.5rem;
+    .genre-chip.active {
+      border-color: var(--gc, var(--amber));
+      color: var(--gc, var(--amber));
+      background: color-mix(in srgb, var(--gc, var(--amber)) 12%, transparent);
     }
 
-    /* ─── Section Divider ─── */
-    .section-divider {
-      text-align: center;
-      color: #2a2a2a;
-      font-size: 1.2rem;
-      margin: 3rem 0;
-      letter-spacing: 0.5em;
+    /* ═══════════════════════════════════════════
+       RULE DIVIDER
+    ═══════════════════════════════════════════ */
+    .rule {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(127, 99, 21, 0.3), transparent);
+      margin: 2.5rem 0;
     }
 
-    /* ─── Gallery ─── */
+    /* ═══════════════════════════════════════════
+       GALLERY
+    ═══════════════════════════════════════════ */
     .gallery-section {
       margin-bottom: 3rem;
     }
-    .section-header {
-      margin-bottom: 1.5rem;
-    }
-    .gallery-section h2 {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #fafafa;
-      text-align: center;
-      margin-bottom: 0.25rem;
-    }
-    .gallery-desc {
-      text-align: center;
-      font-size: 0.75rem;
-      color: #525252;
-    }
+
     .gallery-grid {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 0;
     }
+
     .gallery-item {
-      background: #111111;
-      border: 1px solid #1f1f1f;
-      border-radius: 0.75rem;
-      padding: 1rem 1.25rem;
-      text-align: left;
-      display: flex;
+      background: var(--dark-surface);
+      border: 1px solid rgba(127, 99, 21, 0.18);
+      border-radius: 0;
+      padding: 1.1rem 1.25rem;
+      display: grid;
+      grid-template-columns: 4rem 1fr;
       gap: 1rem;
-      align-items: flex-start;
-      transition: border-color 0.2s;
+      align-items: start;
+      position: relative;
+      transition: all 0.18s ease;
     }
+
+    .gallery-item::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, var(--yellow), var(--amber), var(--orange));
+      opacity: 0;
+      transition: opacity 0.18s ease;
+    }
+
     .gallery-item:hover {
-      border-color: #2a2a2a;
+      border-color: rgba(127, 99, 21, 0.4);
+      background: var(--dark-elevated);
     }
+
+    .gallery-item:hover::before {
+      opacity: 1;
+    }
+
     .gallery-genre {
-      font-size: 0.6rem;
+      font-size: 0.58rem;
       font-weight: 700;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.15em;
       text-transform: uppercase;
-      white-space: nowrap;
       padding-top: 0.15rem;
     }
+
     .gallery-item p {
-      font-size: 0.85rem;
-      color: #a3a3a3;
-      line-height: 1.6;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
       margin: 0;
     }
 
-    /* ─── Use Cases ─── */
+    /* ═══════════════════════════════════════════
+       USE CASES
+    ═══════════════════════════════════════════ */
     .use-cases {
       margin-bottom: 3rem;
     }
-    .use-cases h2 {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #fafafa;
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
+
     .use-case-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-    }
-    .use-case {
-      background: #111111;
-      border: 1px solid #1a1a1a;
-      border-radius: 0.75rem;
-      padding: 1.25rem;
-      text-align: left;
-    }
-    .uc-icon {
-      font-size: 1.5rem;
-      margin-bottom: 0.5rem;
-    }
-    .uc-title {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #e5e5e5;
-      margin-bottom: 0.25rem;
-    }
-    .uc-desc {
-      font-size: 0.75rem;
-      color: #525252;
-      line-height: 1.5;
+      gap: 1px;
+      background: rgba(127, 99, 21, 0.15);
+      border: 1px solid rgba(127, 99, 21, 0.15);
+      border-radius: 0;
+      overflow: hidden;
     }
 
-    /* ─── Why ─── */
+    .use-case {
+      background: var(--dark-surface);
+      padding: 1.5rem 1.25rem;
+      text-align: left;
+    }
+
+    .uc-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .uc-title {
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-primary);
+      margin-bottom: 0.4rem;
+    }
+
+    .uc-desc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ═══════════════════════════════════════════
+       WHY SECTION
+    ═══════════════════════════════════════════ */
     .why-section {
       margin-bottom: 3rem;
     }
-    .why-section h2 {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #fafafa;
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
+
     .why-grid {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
-    }
-    .why-item {
-      background: #111111;
-      border: 1px solid #1a1a1a;
-      border-radius: 0.75rem;
-      padding: 1.25rem;
-      display: grid;
-      grid-template-columns: 2.5rem 1fr;
-      gap: 0 1rem;
-      align-items: start;
-    }
-    .why-num {
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: #2a2a2a;
-      line-height: 1;
-      padding-top: 0.1rem;
-    }
-    .why-title {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: #d97706;
-      margin-bottom: 0.25rem;
-    }
-    .why-desc {
-      font-size: 0.8rem;
-      color: #525252;
-      line-height: 1.6;
-      grid-column: 2;
+      gap: 1px;
+      background: rgba(127, 99, 21, 0.15);
+      border: 1px solid rgba(127, 99, 21, 0.15);
+      border-radius: 0;
+      overflow: hidden;
     }
 
-    /* ─── Footer ─── */
-    .site-footer {
-      border-top: 1px solid #1a1a1a;
-      padding: 2.5rem 0 2rem;
-      margin-top: 2rem;
+    .why-item {
+      background: var(--dark-surface);
+      display: grid;
+      grid-template-columns: 3.5rem 1fr;
+      gap: 0;
+      transition: background 0.18s ease;
     }
-    .footer-top {
+
+    .why-item:hover {
+      background: var(--dark-elevated);
+    }
+
+    .why-num {
+      font-size: 1.8rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: rgba(127, 99, 21, 0.25);
+      line-height: 1;
+      padding: 1.25rem 0 1.25rem 1.25rem;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .why-body {
+      padding: 1.25rem 1.25rem 1.25rem 0;
+    }
+
+    .why-title {
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--yellow);
+      margin-bottom: 0.35rem;
+    }
+
+    .why-desc {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    /* ═══════════════════════════════════════════
+       FOOTER
+    ═══════════════════════════════════════════ */
+    .site-footer {
+      border-top: 1px solid rgba(127, 99, 21, 0.2);
+      padding: 2.5rem 0 2rem;
+      margin-top: 1rem;
+    }
+
+    .footer-inner {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       margin-bottom: 1.5rem;
     }
+
     .footer-logo {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: #d97706;
-    }
-    .footer-brand p {
-      font-size: 0.7rem;
-      color: #404040;
-      margin-top: 0.25rem;
-    }
-    .footer-links {
-      display: flex;
-      gap: 0.5rem;
-      font-size: 0.7rem;
-      color: #404040;
-      align-items: center;
-    }
-    .footer-links a {
-      color: #525252;
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-    .footer-links a:hover {
-      color: #a3a3a3;
-    }
-    .copyright {
-      text-align: center;
-      font-size: 0.65rem;
-      color: #2a2a2a;
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--yellow), var(--amber));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: block;
+      margin-bottom: 0.35rem;
     }
 
-    /* ─── Responsive ─── */
+    .footer-brand p {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+    }
+
+    .footer-links {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.68rem;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      transition: color 0.18s;
+    }
+
+    .footer-links a:hover {
+      color: var(--yellow);
+    }
+
+    .footer-dot {
+      color: var(--text-muted);
+    }
+
+    .footer-copy {
+      text-align: center;
+      font-size: 0.6rem;
+      color: rgba(122, 94, 32, 0.5);
+      letter-spacing: 0.06em;
+    }
+
+    /* ═══════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════ */
     @media (max-width: 500px) {
-      h1 { font-size: 2.2rem; }
-      .use-case-grid { grid-template-columns: 1fr; }
-      .footer-top { flex-direction: column; gap: 1rem; }
-      .why-item { grid-template-columns: 2rem 1fr; }
+      .hero {
+        padding: 3.5rem 0 2rem;
+      }
+      .hero-stats {
+        flex-wrap: wrap;
+        gap: 0.4rem;
+      }
+      .use-case-grid {
+        grid-template-columns: 1fr;
+      }
+      .why-item {
+        grid-template-columns: 2.5rem 1fr;
+      }
+      .footer-inner {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .gallery-item {
+        grid-template-columns: 3rem 1fr;
+      }
     }
   </style>
 </Layout>
