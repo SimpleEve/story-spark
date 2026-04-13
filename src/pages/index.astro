@@ -264,6 +264,18 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       </div>
     </section>
 
+    <!-- HISTORY -->
+    <section class="history-section">
+      <button class="history-toggle" id="historyToggle" type="button" aria-expanded="false">
+        <span>生成历史</span>
+        <span class="history-summary" id="historySummary">0 条记录</span>
+      </button>
+      <div class="history-panel" id="historyPanel" hidden>
+        <p class="history-empty" id="historyEmpty">还没有生成历史，新的灵感会自动记录在这里。</p>
+        <div class="history-list" id="historyList"></div>
+      </div>
+    </section>
+
     <!-- FOOTER -->
     <footer class="site-footer">
       <div class="footer-inner">
@@ -292,6 +304,7 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     const STORAGE_KEYS = {
       favorites: 'story-spark:favorites',
       streak: 'story-spark:streak',
+      history: 'story-spark:history',
     };
 
     function pick(arr: any[]) {
@@ -383,6 +396,20 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       };
     }
 
+    function getSafeColor(value: unknown, fallback = '#ffa110') {
+      if (typeof value !== 'string') return fallback;
+      const color = value.trim();
+      const isHex = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(color);
+      const rgbMatch = color.match(/^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})(?:\s*,\s*(0|1|0?\.\d+))?\s*\)$/);
+      const isRgb = rgbMatch
+        ? rgbMatch.slice(1, 4).every((component) => {
+            const channel = Number(component);
+            return Number.isInteger(channel) && channel >= 0 && channel <= 255;
+          })
+        : false;
+      return isHex || isRgb ? color : fallback;
+    }
+
     function downloadFile(filename: string, content: string, type: string) {
       const blob = new Blob([content], { type });
       const url = URL.createObjectURL(blob);
@@ -397,6 +424,9 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     let currentItem = sanitizeItem(INITIAL_ITEM) || generate();
     const seen = new Set<string>();
     let favorites = readStorage<any[]>(STORAGE_KEYS.favorites, []).map(sanitizeItem).filter(Boolean);
+    let history = readStorage<any[]>(STORAGE_KEYS.history, []).map(sanitizeItem).filter(Boolean);
+    const MAX_HISTORY = 50;
+    if (history.length > MAX_HISTORY) history = history.slice(0, MAX_HISTORY);
 
     function render(item: ReturnType<typeof generate>) {
       currentItem = sanitizeItem(item) || currentItem;
@@ -416,8 +446,22 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
 
       setTimeout(() => {
         premiseText.textContent = currentText;
-        genreBadge.innerHTML = `<span class="genre-name">${item.genre.name}</span><span class="genre-sep">/</span><span class="genre-mood">${item.genre.mood}</span>`;
-        genreBadge.style.setProperty('--gc', item.genre.color);
+        genreBadge.replaceChildren();
+
+        const genreName = document.createElement('span');
+        genreName.className = 'genre-name';
+        genreName.textContent = item.genre.name;
+
+        const genreSep = document.createElement('span');
+        genreSep.className = 'genre-sep';
+        genreSep.textContent = '/';
+
+        const genreMood = document.createElement('span');
+        genreMood.className = 'genre-mood';
+        genreMood.textContent = item.genre.mood;
+
+        genreBadge.append(genreName, genreSep, genreMood);
+        genreBadge.style.setProperty('--gc', getSafeColor(item.genre.color));
         charTag.textContent = `#${item.char.tag}`;
         premiseText.style.opacity = '1';
         premiseText.style.transform = 'translateY(0)';
@@ -443,24 +487,118 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
 
       summary.textContent = `${favorites.length} 条已保存`;
       empty.hidden = favorites.length > 0;
-      list.innerHTML = favorites.map((item, index) => `
-        <article class="favorite-item" data-favorite-index="${index}">
-          <div class="favorite-item-top">
-            <span class="gallery-genre" style="color: ${item.genre.color}">${item.genre.name}</span>
-            <div class="favorite-item-actions">
-              <button class="mini-btn" data-action="load">恢复</button>
-              <button class="mini-btn danger" data-action="remove">删除</button>
-            </div>
-          </div>
-          <p>${toText(item)}</p>
-        </article>
-      `).join('');
+      list.replaceChildren();
+
+      favorites.forEach((item, index) => {
+        const article = document.createElement('article');
+        article.className = 'favorite-item';
+        article.dataset.favoriteIndex = String(index);
+
+        const top = document.createElement('div');
+        top.className = 'favorite-item-top';
+
+        const genre = document.createElement('span');
+        genre.className = 'gallery-genre';
+        genre.textContent = item.genre.name;
+        genre.style.color = getSafeColor(item.genre.color);
+
+        const actions = document.createElement('div');
+        actions.className = 'favorite-item-actions';
+
+        const loadBtn = document.createElement('button');
+        loadBtn.className = 'mini-btn';
+        loadBtn.dataset.action = 'load';
+        loadBtn.type = 'button';
+        loadBtn.textContent = '恢复';
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'mini-btn danger';
+        removeBtn.dataset.action = 'remove';
+        removeBtn.type = 'button';
+        removeBtn.textContent = '删除';
+
+        actions.append(loadBtn, removeBtn);
+        top.append(genre, actions);
+
+        const text = document.createElement('p');
+        text.textContent = toText(item);
+
+        article.append(top, text);
+        list.append(article);
+      });
       syncFavoriteState();
     }
 
     function saveFavorites() {
       writeStorage(STORAGE_KEYS.favorites, favorites);
       renderFavorites();
+    }
+
+    function addToHistory(item: any) {
+      const sanitized = sanitizeItem(item);
+      if (!sanitized) return;
+      // Avoid duplicates
+      history = history.filter((h) => makeKey(h) !== makeKey(sanitized));
+      history = [sanitized, ...history];
+      if (history.length > MAX_HISTORY) {
+        history = history.slice(0, MAX_HISTORY);
+      }
+      writeStorage(STORAGE_KEYS.history, history);
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('historyList');
+      const empty = document.getElementById('historyEmpty');
+      const summary = document.getElementById('historySummary');
+      if (!list || !empty || !summary) return;
+
+      summary.textContent = `${history.length} 条记录`;
+      empty.hidden = history.length > 0;
+      list.replaceChildren();
+
+      history.forEach((item, index) => {
+        const article = document.createElement('article');
+        article.className = 'history-item';
+        article.dataset.historyIndex = String(index);
+
+        const top = document.createElement('div');
+        top.className = 'history-item-top';
+
+        const genre = document.createElement('span');
+        genre.className = 'gallery-genre';
+        genre.textContent = item.genre.name;
+        genre.style.color = getSafeColor(item.genre.color);
+
+        const actions = document.createElement('div');
+        actions.className = 'history-item-actions';
+
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'mini-btn';
+        copyBtn.dataset.action = 'copy';
+        copyBtn.type = 'button';
+        copyBtn.textContent = '复制';
+
+        const loadBtn = document.createElement('button');
+        loadBtn.className = 'mini-btn';
+        loadBtn.dataset.action = 'load';
+        loadBtn.type = 'button';
+        loadBtn.textContent = '恢复';
+
+        actions.append(copyBtn, loadBtn);
+        top.append(genre, actions);
+
+        const text = document.createElement('p');
+        text.textContent = toText(item);
+
+        article.append(top, text);
+        list.append(article);
+      });
+    }
+
+    function saveHistory() {
+      writeStorage(STORAGE_KEYS.history, history);
+      renderHistory();
     }
 
     function toggleFavorite() {
@@ -536,7 +674,9 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     }
 
     document.getElementById('generateBtn')?.addEventListener('click', () => {
-      render(generate());
+      const item = generate();
+      render(item);
+      addToHistory(item);
       refreshGallery();
     });
 
@@ -569,7 +709,9 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
         const genreName = (chip as HTMLElement).dataset.genre;
         const genre = GENRES.find((g: any) => g.name === genreName);
         if (!genre) return;
-        render({ char: pick(CHARACTERS), genre, setting: pick(SETTINGS), hook: pick(HOOKS) });
+        const item = { char: pick(CHARACTERS), genre, setting: pick(SETTINGS), hook: pick(HOOKS) };
+        render(item);
+        addToHistory(item);
         refreshGallery();
       });
     });
@@ -579,7 +721,9 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       if (e.key === ' ' || e.key === 'Enter') {
         if (document.activeElement?.tagName === 'BUTTON') return;
         e.preventDefault();
-        render(generate());
+        const item = generate();
+        render(item);
+        addToHistory(item);
         refreshGallery();
       }
     });
@@ -587,6 +731,15 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     document.getElementById('favoritesToggle')?.addEventListener('click', () => {
       const panel = document.getElementById('favoritesPanel');
       const toggle = document.getElementById('favoritesToggle');
+      if (!panel || !toggle) return;
+      const expanded = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!expanded));
+      panel.hidden = expanded;
+    });
+
+    document.getElementById('historyToggle')?.addEventListener('click', () => {
+      const panel = document.getElementById('historyPanel');
+      const toggle = document.getElementById('historyToggle');
       if (!panel || !toggle) return;
       const expanded = toggle.getAttribute('aria-expanded') === 'true';
       toggle.setAttribute('aria-expanded', String(!expanded));
@@ -607,6 +760,28 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       if (button.dataset.action === 'remove') {
         favorites.splice(index, 1);
         saveFavorites();
+      }
+    });
+
+    document.getElementById('historyList')?.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement;
+      const button = target.closest('[data-action]') as HTMLElement | null;
+      const item = target.closest('[data-history-index]') as HTMLElement | null;
+      if (!button || !item) return;
+      const index = Number(item.dataset.historyIndex);
+      if (Number.isNaN(index) || !history[index]) return;
+
+      if (button.dataset.action === 'load') {
+        render(history[index]);
+      }
+      if (button.dataset.action === 'copy') {
+        const text = toText(history[index]);
+        navigator.clipboard.writeText(text).then(() => {
+          const btn = button;
+          const originalHtml = btn.innerHTML;
+          btn.textContent = '已复制';
+          setTimeout(() => { btn.innerHTML = originalHtml; }, 1500);
+        });
       }
     });
 
@@ -652,6 +827,7 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     updateDailyStory();
     runStreak();
     renderFavorites();
+    renderHistory();
     syncFavoriteState();
   </script>
 
@@ -689,12 +865,12 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     }
 
     /* btn-icon inside buttons */
-    .btn-icon {
+    :global(.btn-icon) {
       width: 1.1em;
       height: 1.1em;
       flex-shrink: 0;
     }
-    .btn-icon-sm {
+    :global(.btn-icon-sm) {
       width: 0.95em;
       height: 0.95em;
       flex-shrink: 0;
@@ -1056,11 +1232,11 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       transform: scale(0.97);
     }
 
-    .btn-icon {
+    :global(.btn-icon) {
       font-size: 1rem;
     }
 
-    .btn-generate:hover .btn-icon {
+    :global(.btn-generate:hover .btn-icon) {
       animation: spin-spark 0.4s ease;
     }
 
@@ -1382,6 +1558,76 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     }
 
     .favorite-item p {
+      font-size: 0.78rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+    }
+
+    /* HISTORY SECTION */
+    .history-section {
+      margin-bottom: 3rem;
+    }
+
+    .history-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.1rem;
+      background: var(--dark-surface);
+      border: 1px solid rgba(127, 99, 21, 0.24);
+      color: var(--text-primary);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+    }
+
+    .history-summary {
+      color: var(--text-muted);
+      font-size: 0.66rem;
+      font-weight: 600;
+    }
+
+    .history-panel {
+      border: 1px solid rgba(127, 99, 21, 0.18);
+      border-top: none;
+      background: rgba(36, 26, 8, 0.88);
+      padding: 1rem;
+    }
+
+    .history-empty {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .history-item {
+      border: 1px solid rgba(127, 99, 21, 0.18);
+      background: var(--dark-surface);
+      padding: 0.95rem 1rem;
+    }
+
+    .history-item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .history-item-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .history-item p {
       font-size: 0.78rem;
       line-height: 1.7;
       color: var(--text-secondary);
