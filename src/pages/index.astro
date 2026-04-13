@@ -118,6 +118,7 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
         data-settings={JSON.stringify(elements.settings)}
         data-hooks={JSON.stringify(elements.hooks)}
         data-gallery={JSON.stringify(gallery)}
+        data-initial-text={initialText}
       ></div>
 
       <!-- ACTIONS -->
@@ -244,10 +245,12 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
   </main>
 
   <script>
-    const CHARACTERS = JSON.parse(document.querySelector('.data-seed')?.dataset.characters || '[]');
-    const GENRES = JSON.parse(document.querySelector('.data-seed')?.dataset.genres || '[]');
-    const SETTINGS = JSON.parse(document.querySelector('.data-seed')?.dataset.settings || '[]');
-    const HOOKS = JSON.parse(document.querySelector('.data-seed')?.dataset.hooks || '[]');
+    const seed = document.querySelector('.data-seed');
+    const CHARACTERS = JSON.parse(seed?.dataset.characters || '[]');
+    const GENRES = JSON.parse(seed?.dataset.genres || '[]');
+    const SETTINGS = JSON.parse(seed?.dataset.settings || '[]');
+    const HOOKS = JSON.parse(seed?.dataset.hooks || '[]');
+    const INITIAL_TEXT = seed?.dataset.initialText || '';
 
     function pick(arr: any[]) {
       return arr[Math.floor(Math.random() * arr.length)];
@@ -266,7 +269,7 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       };
     }
 
-    let currentText = initialText;
+    let currentText = INITIAL_TEXT;
     const seen = new Set<string>();
 
     function render(item: ReturnType<typeof generate>) {
