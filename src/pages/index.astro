@@ -93,6 +93,19 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       </div>
     </header>
 
+    <!-- DAILY STRIP -->
+    <div class="daily-strip">
+      <div class="daily-story-card" id="dailyStoryCard">
+        <div class="mini-label">今日故事</div>
+        <div class="daily-story-content" id="dailyStoryContent">加载中...</div>
+      </div>
+      <div class="streak-card" id="streakCard">
+        <div class="mini-label">连续访问</div>
+        <div class="streak-value" id="streakValue">—</div>
+        <div class="streak-unit">天</div>
+      </div>
+    </div>
+
     <!-- PREMISE CARD -->
     <div class="premise-block">
       <div class="premise-card" id="premiseCard">
@@ -111,6 +124,15 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
         </div>
       </div>
 
+      <!-- Premise Meta: Favorite -->
+      <div class="premise-meta" id="premiseMeta">
+        <button class="btn-favorite" id="favoriteBtn">
+          <svg class="btn-icon-sm" aria-hidden="true"><use href="#icon-heart"/></svg>
+          <span id="favoriteLabel">收藏</span>
+        </button>
+        <span class="favorite-status" id="favoriteStatus"></span>
+      </div>
+
       <!-- Seed data (hidden) -->
       <div class="data-seed"
         data-characters={JSON.stringify(elements.characters)}
@@ -118,6 +140,7 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
         data-settings={JSON.stringify(elements.settings)}
         data-hooks={JSON.stringify(elements.hooks)}
         data-gallery={JSON.stringify(gallery)}
+        data-initial-item={JSON.stringify(initial)}
       ></div>
 
       <!-- ACTIONS -->
@@ -168,6 +191,35 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     </section>
 
     <div class="rule"></div>
+
+    <!-- FAVORITES SECTION -->
+    <section class="favorites-section" id="favoritesSection">
+      <button class="favorites-toggle" id="favoritesToggle">
+        <svg class="btn-icon-sm" aria-hidden="true"><use href="#icon-heart"/></svg>
+        <span>收藏夹</span>
+        <svg class="toggle-chevron" aria-hidden="true"><use href="#icon-chevron"/></svg>
+      </button>
+      <div class="favorites-panel" id="favoritesPanel">
+        <div class="favorites-actions">
+          <button class="btn-export" id="exportFavoritesBtn">导出 JSON</button>
+          <button class="btn-import" id="importFavoritesBtn">导入 JSON</button>
+          <input type="file" id="importFavoritesInput" accept=".json" style="display:none"/>
+        </div>
+        <div class="favorites-list" id="favoritesList"></div>
+      </div>
+    </section>
+
+    <!-- HISTORY SECTION -->
+    <section class="history-section" id="historySection">
+      <button class="history-toggle" id="historyToggle">
+        <svg class="btn-icon-sm" aria-hidden="true"><use href="#icon-clock"/></svg>
+        <span>生成历史</span>
+        <svg class="toggle-chevron" aria-hidden="true"><use href="#icon-chevron"/></svg>
+      </button>
+      <div class="history-panel" id="historyPanel">
+        <div class="history-list" id="historyList"></div>
+      </div>
+    </section>
 
     <!-- USE CASES -->
     <section class="use-cases">
@@ -267,15 +319,17 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     }
 
     let currentText = '';
+    let currentItem: ReturnType<typeof generate> | null = null;
     const seen = new Set<string>();
 
-    function render(item: ReturnType<typeof generate>) {
+    function render(item: ReturnType<typeof generate>, skipHistory = false) {
       const key = makeKey(item);
       if (seen.has(key)) return;
       seen.add(key);
       if (seen.size > 100) seen.clear();
 
       currentText = `${item.char.name}，${item.setting.name}，${item.hook}。`;
+      currentItem = item;
 
       const premiseText = document.getElementById('premiseText')!;
       const genreBadge = document.getElementById('genreBadge')!;
@@ -291,7 +345,15 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
         charTag.textContent = `#${item.char.tag}`;
         premiseText.style.opacity = '1';
         premiseText.style.transform = 'translateY(0)';
+
+        // Sync favorite state
+        syncFavoriteState();
       }, 150);
+
+      // Save to history (skip on initial load)
+      if (!skipHistory) {
+        saveToHistory(item);
+      }
     }
 
     function refreshGallery() {
@@ -344,6 +406,366 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
         refreshGallery();
       }
     });
+
+    // ═══════════════════════════════════════════
+    // PHASE 0.1 — FAVORITES SYSTEM
+    // ═══════════════════════════════════════════
+    const STORAGE_KEYS = {
+      favorites: 'story-spark:favorites',
+      streak: 'story-spark:streak',
+      history: 'story-spark:history',
+    };
+
+    function readStorage(key: string) {
+      try {
+        return JSON.parse(localStorage.getItem(key) || '[]');
+      } catch {
+        return [];
+      }
+    }
+
+    function writeStorage(key: string, data: any[]) {
+      localStorage.setItem(key, JSON.stringify(data));
+    }
+
+    function sanitizeItem(str: string): string {
+      return str.replace(/[&<>"']/g, (m) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m] || m));
+    }
+
+    function getSafeColor(color: string): string {
+      if (/^#[0-9a-fA-F]{6}$/.test(color)) return color;
+      return '#ffa110';
+    }
+
+    function makeItemKey(item: any) {
+      return `${item.char.name}|${item.genre.name}|${item.setting.name}|${item.hook}`;
+    }
+
+    function isFavorite(item: any): boolean {
+      const favorites = readStorage(STORAGE_KEYS.favorites);
+      const key = makeItemKey(item);
+      return favorites.some((f: any) => makeItemKey(f) === key);
+    }
+
+    function toggleFavorite() {
+      if (!currentItem) return;
+      const favorites = readStorage(STORAGE_KEYS.favorites);
+      const key = makeItemKey(currentItem);
+      const idx = favorites.findIndex((f: any) => makeItemKey(f) === key);
+
+      if (idx >= 0) {
+        favorites.splice(idx, 1);
+      } else {
+        favorites.unshift({ ...currentItem, savedAt: Date.now() });
+      }
+
+      writeStorage(STORAGE_KEYS.favorites, favorites);
+      syncFavoriteState();
+      renderFavorites();
+    }
+
+    function syncFavoriteState() {
+      const btn = document.getElementById('favoriteBtn');
+      const label = document.getElementById('favoriteLabel');
+      const status = document.getElementById('favoriteStatus');
+
+      if (!btn || !label || !status || !currentItem) return;
+
+      const isFav = isFavorite(currentItem);
+      btn.classList.toggle('active', isFav);
+      label.textContent = isFav ? '已收藏' : '收藏';
+      status.textContent = isFav ? '★ 已存入收藏夹' : '';
+    }
+
+    function renderFavorites() {
+      const list = document.getElementById('favoritesList');
+      if (!list) return;
+
+      const favorites = readStorage(STORAGE_KEYS.favorites);
+
+      if (favorites.length === 0) {
+        list.innerHTML = '<div class="empty-state">还没有收藏任何灵感</div>';
+        return;
+      }
+
+      list.innerHTML = favorites.map((fav: any, idx: number) => `
+        <div class="favorite-item" data-index="${idx}">
+          <span class="favorite-item-genre" style="color: ${getSafeColor(fav.genre.color)}">${sanitizeItem(fav.genre.name)}</span>
+          <span class="favorite-item-text">${sanitizeItem(fav.char.name)}，${sanitizeItem(fav.setting.name)}，${sanitizeItem(fav.hook)}。</span>
+          <button class="favorite-item-delete" data-delete="${idx}">删除</button>
+        </div>
+      `).join('');
+
+      // Click on item to load it
+      list.querySelectorAll('.favorite-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          const target = e.target as HTMLElement;
+          if (target.classList.contains('favorite-item-delete')) return;
+          const idx = parseInt((item as HTMLElement).dataset.index || '0');
+          const favorites = readStorage(STORAGE_KEYS.favorites);
+          if (favorites[idx]) {
+            loadFromHistory(favorites[idx]);
+          }
+        });
+      });
+
+      // Delete handler
+      list.querySelectorAll('.favorite-item-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const idx = parseInt((btn as HTMLElement).dataset.delete || '0');
+          const favorites = readStorage(STORAGE_KEYS.favorites);
+          favorites.splice(idx, 1);
+          writeStorage(STORAGE_KEYS.favorites, favorites);
+          renderFavorites();
+          syncFavoriteState();
+        });
+      });
+    }
+
+    // Export favorites
+    function exportFavorites() {
+      const favorites = readStorage(STORAGE_KEYS.favorites);
+      const blob = new Blob([JSON.stringify(favorites, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'story-spark-favorites.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Import favorites
+    function importFavorites(file: File) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target?.result as string);
+          if (Array.isArray(data)) {
+            const favorites = readStorage(STORAGE_KEYS.favorites);
+            const existingKeys = new Set(favorites.map((f: any) => makeItemKey(f)));
+            data.forEach((item: any) => {
+              if (!existingKeys.has(makeItemKey(item))) {
+                favorites.unshift({ ...item, savedAt: Date.now() });
+              }
+            });
+            writeStorage(STORAGE_KEYS.favorites, favorites);
+            renderFavorites();
+            syncFavoriteState();
+          }
+        } catch (err) {
+          console.error('Import failed:', err);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // ═══════════════════════════════════════════
+    // PHASE 0.2 — STREAK & DAILY STORY
+    // ═══════════════════════════════════════════
+    function isoToday(): string {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function daysBetween(a: string, b: string): number {
+      const msPerDay = 24 * 60 * 60 * 1000;
+      return Math.round((new Date(b).getTime() - new Date(a).getTime()) / msPerDay);
+    }
+
+    function updateStreak() {
+      const streakData = readStorage(STORAGE_KEYS.streak) || {};
+      const today = isoToday();
+      const lastVisit = streakData.lastVisit || '';
+
+      let streak = streakData.streak || 0;
+
+      if (lastVisit === today) {
+        // Already visited today
+      } else if (lastVisit && daysBetween(lastVisit, today) === 1) {
+        streak += 1;
+      } else if (lastVisit !== today) {
+        streak = 1;
+      }
+
+      streakData.lastVisit = today;
+      streakData.streak = streak;
+      writeStorage(STORAGE_KEYS.streak, streakData);
+
+      const streakValue = document.getElementById('streakValue');
+      if (streakValue) {
+        streakValue.textContent = String(streak);
+      }
+    }
+
+    function hashString(str: string): number {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash |= 0;
+      }
+      return Math.abs(hash);
+    }
+
+    function seededPick<T>(arr: T[], seed: number): T {
+      const idx = seed % arr.length;
+      return arr[idx < 0 ? arr.length + idx : idx];
+    }
+
+    function getDailyStory() {
+      const today = isoToday();
+      const seed = hashString(today);
+      return {
+        char: seededPick(CHARACTERS, seed),
+        genre: seededPick(GENRES, seed + 1000),
+        setting: seededPick(SETTINGS, seed + 2000),
+        hook: seededPick(HOOKS, seed + 3000),
+      };
+    }
+
+    function renderDailyStory() {
+      const daily = getDailyStory();
+      const content = document.getElementById('dailyStoryContent');
+      if (content) {
+        content.textContent = `${daily.char.name}，${daily.setting.name}，${daily.hook}。`;
+      }
+    }
+
+    // ═══════════════════════════════════════════
+    // PHASE 0.3 — HISTORY
+    // ═══════════════════════════════════════════
+    function saveToHistory(item: any) {
+      const history = readStorage(STORAGE_KEYS.history);
+      const entry = { ...item, timestamp: Date.now() };
+
+      // Avoid exact duplicates
+      const existingIdx = history.findIndex((h: any) => makeItemKey(h) === makeItemKey(entry));
+      if (existingIdx >= 0) {
+        history.splice(existingIdx, 1);
+      }
+
+      history.unshift(entry);
+
+      // Keep max 50 items
+      if (history.length > 50) {
+        history.splice(50);
+      }
+
+      writeStorage(STORAGE_KEYS.history, history);
+      renderHistory();
+    }
+
+    function loadFromHistory(item: any) {
+      currentItem = item;
+      currentText = `${item.char.name}，${item.setting.name}，${item.hook}。`;
+
+      const premiseText = document.getElementById('premiseText');
+      const genreBadge = document.getElementById('genreBadge');
+      const charTag = document.getElementById('charTag');
+
+      if (premiseText) premiseText.textContent = currentText;
+      if (genreBadge) {
+        genreBadge.innerHTML = `<span class="genre-name">${item.genre.name}</span><span class="genre-sep">/</span><span class="genre-mood">${item.genre.mood}</span>`;
+        genreBadge.style.setProperty('--gc', item.genre.color);
+      }
+      if (charTag) charTag.textContent = `#${item.char.tag}`;
+
+      syncFavoriteState();
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('historyList');
+      if (!list) return;
+
+      const history = readStorage(STORAGE_KEYS.history);
+
+      if (history.length === 0) {
+        list.innerHTML = '<div class="empty-state">还没有生成历史</div>';
+        return;
+      }
+
+      list.innerHTML = history.map((h: any, idx: number) => {
+        const date = new Date(h.timestamp);
+        const timeStr = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+        return `
+          <div class="history-item" data-index="${idx}">
+            <span class="history-item-time">${timeStr}</span>
+            <span class="favorite-item-genre" style="color: ${getSafeColor(h.genre.color)}">${sanitizeItem(h.genre.name)}</span>
+            <span class="history-item-text">${sanitizeItem(h.char.name)}，${sanitizeItem(h.setting.name)}，${sanitizeItem(h.hook)}。</span>
+          </div>
+        `;
+      }).join('');
+
+      list.querySelectorAll('.history-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const idx = parseInt((item as HTMLElement).dataset.index || '0');
+          const history = readStorage(STORAGE_KEYS.history);
+          if (history[idx]) {
+            loadFromHistory(history[idx]);
+          }
+        });
+      });
+    }
+
+    // ═══════════════════════════════════════════
+    // INITIALIZATION
+    // ═══════════════════════════════════════════
+    function init() {
+      // Initialize daily story and streak
+      renderDailyStory();
+      updateStreak();
+
+      // Load initial item from data attribute
+      const dataSeed = document.querySelector('.data-seed');
+      const initialItem = dataSeed ? (dataSeed as HTMLElement).dataset.initialItem : null;
+      if (initialItem) {
+        try {
+          const item = JSON.parse(initialItem);
+          currentItem = item;
+          currentText = `${item.char.name}，${item.setting.name}，${item.hook}。`;
+          syncFavoriteState();
+        } catch (e) {
+          // ignore parse errors
+        }
+      }
+
+      // Render favorites and history
+      renderFavorites();
+      renderHistory();
+
+      // Event listeners
+      document.getElementById('favoriteBtn')?.addEventListener('click', toggleFavorite);
+
+      document.getElementById('favoritesToggle')?.addEventListener('click', () => {
+        const btn = document.getElementById('favoritesToggle');
+        const panel = document.getElementById('favoritesPanel');
+        btn?.classList.toggle('open');
+        panel?.classList.toggle('open');
+      });
+
+      document.getElementById('historyToggle')?.addEventListener('click', () => {
+        const btn = document.getElementById('historyToggle');
+        const panel = document.getElementById('historyPanel');
+        btn?.classList.toggle('open');
+        panel?.classList.toggle('open');
+      });
+
+      document.getElementById('exportFavoritesBtn')?.addEventListener('click', exportFavorites);
+
+      document.getElementById('importFavoritesBtn')?.addEventListener('click', () => {
+        document.getElementById('importFavoritesInput')?.click();
+      });
+
+      document.getElementById('importFavoritesInput')?.addEventListener('change', (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (file) importFavorites(file);
+      });
+    }
+
+    // Run init when DOM is ready
+    init();
   </script>
 
   <style>
@@ -1011,6 +1433,261 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       .gallery-item {
         grid-template-columns: 3rem 1fr;
       }
+    }
+
+    /* ═══════════════════════════════════════════
+       DAILY STRIP — Phase 0.2
+    ═══════════════════════════════════════════ */
+    .daily-strip {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .daily-story-card, .streak-card {
+      flex: 1;
+      background: var(--dark-surface);
+      border: 1px solid rgba(127, 99, 21, 0.25);
+      border-radius: 0;
+      padding: 1rem 1.25rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .daily-story-card::before, .streak-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--yellow), var(--amber));
+    }
+
+    .mini-label {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 0.5rem;
+    }
+
+    .daily-story-content {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .streak-value {
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: var(--yellow);
+      line-height: 1;
+    }
+
+    .streak-unit {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* ═══════════════════════════════════════════
+       PREMISE META — Phase 0.1
+    ═══════════════════════════════════════════ */
+    .premise-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      min-height: 2.5rem;
+    }
+
+    .btn-favorite {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      border: 1px solid rgba(127, 99, 21, 0.3);
+      background: var(--dark-surface);
+      color: var(--text-secondary);
+      border-radius: 0;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .btn-favorite:hover {
+      border-color: #f87171;
+      color: #f87171;
+      background: rgba(248, 113, 113, 0.08);
+    }
+
+    .btn-favorite.active {
+      border-color: #f87171;
+      color: #f87171;
+      background: rgba(248, 113, 113, 0.12);
+    }
+
+    .favorite-status {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+    }
+
+    /* ═══════════════════════════════════════════
+       FAVORITES & HISTORY SECTIONS — Phase 0.1/0.3
+    ═══════════════════════════════════════════ */
+    .favorites-section, .history-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .favorites-toggle, .history-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.8rem 1rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid rgba(127, 99, 21, 0.2);
+      background: var(--dark-surface);
+      color: var(--text-secondary);
+      border-radius: 0;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .favorites-toggle:hover, .history-toggle:hover {
+      border-color: rgba(255, 161, 16, 0.4);
+      color: var(--yellow);
+      background: var(--dark-elevated);
+    }
+
+    .favorites-toggle svg, .history-toggle svg {
+      flex-shrink: 0;
+    }
+
+    .toggle-chevron {
+      margin-left: auto;
+      transition: transform 0.2s ease;
+    }
+
+    .favorites-toggle.open .toggle-chevron,
+    .history-toggle.open .toggle-chevron {
+      transform: rotate(180deg);
+    }
+
+    .favorites-panel, .history-panel {
+      display: none;
+      border: 1px solid rgba(127, 99, 21, 0.2);
+      border-top: none;
+      background: var(--dark-surface);
+    }
+
+    .favorites-panel.open, .history-panel.open {
+      display: block;
+    }
+
+    .favorites-actions {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      border-bottom: 1px solid rgba(127, 99, 21, 0.15);
+    }
+
+    .btn-export, .btn-import {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      border: 1px solid rgba(127, 99, 21, 0.25);
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 0;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .btn-export:hover, .btn-import:hover {
+      border-color: rgba(255, 161, 16, 0.5);
+      color: var(--yellow);
+    }
+
+    .favorites-list, .history-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .favorite-item, .history-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid rgba(127, 99, 21, 0.1);
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .favorite-item:last-child, .history-item:last-child {
+      border-bottom: none;
+    }
+
+    .favorite-item:hover, .history-item:hover {
+      background: var(--dark-elevated);
+    }
+
+    .favorite-item-genre {
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.5rem;
+      border: 1px solid rgba(127, 99, 21, 0.2);
+      background: rgba(255, 217, 0, 0.04);
+      color: var(--amber);
+      flex-shrink: 0;
+    }
+
+    .favorite-item-text, .history-item-text {
+      flex: 1;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .history-item-time {
+      font-size: 0.58rem;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .favorite-item-delete {
+      padding: 0.2rem 0.5rem;
+      font-size: 0.6rem;
+      border: 1px solid rgba(127, 99, 21, 0.2);
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 0;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .favorite-item-delete:hover {
+      border-color: #f87171;
+      color: #f87171;
+    }
+
+    .empty-state {
+      padding: 1.5rem;
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--text-muted);
     }
   </style>
 </Layout>
