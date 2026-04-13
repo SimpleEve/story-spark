@@ -123,17 +123,17 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       <!-- ACTIONS -->
       <div class="actions-row">
         <button class="btn-generate" id="generateBtn">
-          <span class="btn-icon">✦</span>
+          <svg class="btn-icon" aria-hidden="true"><use href="#icon-spark"/></svg>
           <span>生成新灵感</span>
         </button>
       </div>
 
       <div class="share-row">
         <button class="btn-copy" id="copyBtn">
-          <span class="btn-icon-sm">📋</span>复制
+          <svg class="btn-icon-sm" aria-hidden="true"><use href="#icon-copy"/></svg><span>复制</span>
         </button>
         <button class="btn-share" id="shareBtn">
-          <span class="btn-icon-sm">𝕏</span>分享
+          <svg class="btn-icon-sm" aria-hidden="true"><use href="#icon-spark"/></svg><span>分享</span>
         </button>
       </div>
 
@@ -174,22 +174,22 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       <div class="section-label">谁在用</div>
       <div class="use-case-grid">
         <div class="use-case">
-          <div class="uc-icon">📖</div>
+          <svg class="uc-icon" aria-hidden="true"><use href="#icon-book"/></svg>
           <div class="uc-title">小说作者</div>
           <div class="uc-desc">打破写作瓶颈，找到下一个故事的核心 Premise</div>
         </div>
         <div class="use-case">
-          <div class="uc-icon">🎲</div>
+          <svg class="uc-icon" aria-hidden="true"><use href="#icon-dice"/></svg>
           <div class="uc-title">DnD 跑团</div>
           <div class="uc-desc">快速生成情境设定，让玩家立即进入状态</div>
         </div>
         <div class="use-case">
-          <div class="uc-icon">🎬</div>
+          <svg class="uc-icon" aria-hidden="true"><use href="#icon-clapper"/></svg>
           <div class="uc-title">剧本创作</div>
           <div class="uc-desc">30秒获得一个故事核，专注叙事而不是开头的痛苦</div>
         </div>
         <div class="use-case">
-          <div class="uc-icon">🎮</div>
+          <svg class="uc-icon" aria-hidden="true"><use href="#icon-gamepad"/></svg>
           <div class="uc-title">游戏策划</div>
           <div class="uc-desc">为游戏世界注入独特的背景设定和任务灵感</div>
         </div>
@@ -230,7 +230,7 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     <footer class="site-footer">
       <div class="footer-inner">
         <div class="footer-brand">
-          <span class="footer-logo">✦ STORY SPARK</span>
+          <svg style="display:inline-block;width:1em;height:1em;vertical-align:-0.1em" aria-hidden="true"><use href="#icon-spark"/></svg> STORY SPARK
           <p>免费工具 · 无需注册 · 即开即用</p>
         </div>
         <div class="footer-links">
@@ -312,16 +312,16 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     });
 
     document.getElementById('copyBtn')?.addEventListener('click', () => {
-      const text = `📖 故事灵感来自 Story Spark ✦\n\n${currentText}\n\n👉 https://simpleeve.github.io/story-spark/`;
+      const text = `故事灵感来自 Story Spark\n\n${currentText}\n\nhttps://simpleeve.github.io/story-spark/`;
       navigator.clipboard.writeText(text).then(() => {
         const btn = document.getElementById('copyBtn')!;
-        btn.textContent = '✅ 已复制';
-        setTimeout(() => btn.innerHTML = '<span class="btn-icon-sm">📋</span>复制', 1500);
+        btn.innerHTML = '<svg class="btn-icon-sm" aria-hidden="true"><use href="#icon-check"/></svg><span>已复制</span>';
+        setTimeout(() => btn.innerHTML = '<svg class="btn-icon-sm" aria-hidden="true"><use href="#icon-copy"/></svg><span>复制</span>', 1500);
       });
     });
 
     document.getElementById('shareBtn')?.addEventListener('click', () => {
-      const text = `📖 故事灵感 ✦\n\n${currentText}\n\n✨ 由 @StorySparkAI 生成\n👉 https://simpleeve.github.io/story-spark/`;
+      const text = `故事灵感\n\n${currentText}\n\n由 @StorySparkAI 生成\nhttps://simpleeve.github.io/story-spark/`;
       window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
     });
 
@@ -372,6 +372,31 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       margin: 0;
       padding: 0;
     }
+
+    /* SVG Icons */
+    :global(svg) {
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    /* btn-icon inside buttons */
+    .btn-icon {
+      width: 1.1em;
+      height: 1.1em;
+      flex-shrink: 0;
+    }
+    .btn-icon-sm {
+      width: 0.95em;
+      height: 0.95em;
+      flex-shrink: 0;
+    }
+    .uc-icon {
+      width: 1.5rem;
+      height: 1.5rem;
+      margin-bottom: 0.6rem;
+      color: var(--amber);
+    }
+
 
     :global(html) {
       scroll-behavior: smooth;
