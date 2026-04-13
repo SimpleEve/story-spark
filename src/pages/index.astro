@@ -315,8 +315,8 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       const text = `故事灵感来自 Story Spark\n\n${currentText}\n\nhttps://simpleeve.github.io/story-spark/`;
       navigator.clipboard.writeText(text).then(() => {
         const btn = document.getElementById('copyBtn')!;
-        btn.innerHTML = '<svg class="btn-icon-sm" aria-hidden="true"><use href="#icon-check"/></svg><span>已复制</span>';
-        setTimeout(() => btn.innerHTML = '<svg class="btn-icon-sm" aria-hidden="true"><use href="#icon-copy"/></svg><span>复制</span>', 1500);
+        btn.innerHTML = '<svg class="btn-icon-sm" style="width:0.95em;height:0.95em;flex-shrink:0" aria-hidden="true"><use href="#icon-check"/></svg><span>已复制</span>';
+        setTimeout(() => btn.innerHTML = '<svg class="btn-icon-sm" style="width:0.95em;height:0.95em;flex-shrink:0" aria-hidden="true"><use href="#icon-copy"/></svg><span>复制</span>', 1500);
       });
     });
 
