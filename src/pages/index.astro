@@ -266,7 +266,7 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       };
     }
 
-    let currentText = '';
+    let currentText = initialText;
     const seen = new Set<string>();
 
     function render(item: ReturnType<typeof generate>) {
@@ -312,6 +312,9 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     });
 
     document.getElementById('copyBtn')?.addEventListener('click', () => {
+      if (!currentText) {
+        render(generate());
+      }
       const text = `故事灵感来自 Story Spark\n\n${currentText}\n\nhttps://simpleeve.github.io/story-spark/`;
       navigator.clipboard.writeText(text).then(() => {
         const btn = document.getElementById('copyBtn')!;
@@ -321,6 +324,9 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     });
 
     document.getElementById('shareBtn')?.addEventListener('click', () => {
+      if (!currentText) {
+        render(generate());
+      }
       const text = `故事灵感\n\n${currentText}\n\n由 @StorySparkAI 生成\nhttps://simpleeve.github.io/story-spark/`;
       window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
     });
