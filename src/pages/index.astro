@@ -80,6 +80,17 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       <div class="hero-eyebrow">CREATIVE WRITING TOOL</div>
       <h1 class="hero-title">STORY<br/>SPARK</h1>
       <p class="hero-sub">故事灵感引擎 · 每次都是全新宇宙</p>
+      <div class="daily-strip">
+        <div class="daily-story-card">
+          <div class="mini-label">今日故事</div>
+          <p id="dailyStoryText">{initialText}</p>
+        </div>
+        <div class="streak-card" id="streakCard">
+          <div class="mini-label">访问 Streak</div>
+          <div class="streak-value"><span id="streakCount">1</span> 天</div>
+          <p id="streakHint">今天第一次访问，开始积累灵感习惯。</p>
+        </div>
+      </div>
       <div class="hero-stats">
         <span class="stat-num">8</span><span class="stat-label">类型</span>
         <span class="stat-sep">×</span>
@@ -108,6 +119,13 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
           <blockquote class="premise-text" id="premiseText">
             {initialText}
           </blockquote>
+          <div class="premise-meta">
+            <button class="btn-favorite" id="favoriteBtn" type="button" aria-pressed="false">
+              <svg class="btn-icon-sm" aria-hidden="true"><use href="#icon-heart"/></svg>
+              <span>收藏灵感</span>
+            </button>
+            <span class="premise-status" id="favoriteStatus">未收藏</span>
+          </div>
         </div>
       </div>
 
@@ -119,6 +137,7 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
         data-hooks={JSON.stringify(elements.hooks)}
         data-gallery={JSON.stringify(gallery)}
         data-initial-text={initialText}
+        data-initial-item={JSON.stringify(initial)}
       ></div>
 
       <!-- ACTIONS -->
@@ -227,6 +246,24 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       </div>
     </section>
 
+    <div class="rule"></div>
+
+    <section class="favorites-section">
+      <button class="favorites-toggle" id="favoritesToggle" type="button" aria-expanded="false">
+        <span>收藏夹</span>
+        <span class="favorites-summary" id="favoritesSummary">0 条已保存</span>
+      </button>
+      <div class="favorites-panel" id="favoritesPanel" hidden>
+        <div class="favorites-actions">
+          <button class="panel-btn" id="exportFavoritesBtn" type="button">导出 JSON</button>
+          <button class="panel-btn" id="importFavoritesBtn" type="button">导入 JSON</button>
+          <input id="importFavoritesInput" type="file" accept="application/json" hidden />
+        </div>
+        <p class="favorites-empty" id="favoritesEmpty">还没有收藏，先把喜欢的 premise 存下来。</p>
+        <div class="favorites-list" id="favoritesList"></div>
+      </div>
+    </section>
+
     <!-- FOOTER -->
     <footer class="site-footer">
       <div class="footer-inner">
@@ -244,13 +281,18 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     </footer>
   </main>
 
-  <script>
+  <script is:inline>
     const seed = document.querySelector('.data-seed');
     const CHARACTERS = JSON.parse(seed?.dataset.characters || '[]');
     const GENRES = JSON.parse(seed?.dataset.genres || '[]');
     const SETTINGS = JSON.parse(seed?.dataset.settings || '[]');
     const HOOKS = JSON.parse(seed?.dataset.hooks || '[]');
     const INITIAL_TEXT = seed?.dataset.initialText || '';
+    const INITIAL_ITEM = JSON.parse(seed?.dataset.initialItem || 'null');
+    const STORAGE_KEYS = {
+      favorites: 'story-spark:favorites',
+      streak: 'story-spark:streak',
+    };
 
     function pick(arr: any[]) {
       return arr[Math.floor(Math.random() * arr.length)];
@@ -269,16 +311,101 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       };
     }
 
+    function readStorage<T>(key: string, fallback: T): T {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    function writeStorage(key: string, value: unknown) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+
+    function isoToday() {
+      const now = new Date();
+      const offset = now.getTimezoneOffset() * 60000;
+      return new Date(now.getTime() - offset).toISOString().slice(0, 10);
+    }
+
+    function parseDateValue(value: string) {
+      return new Date(`${value}T00:00:00`);
+    }
+
+    function daysBetween(from: string, to: string) {
+      const diff = parseDateValue(to).getTime() - parseDateValue(from).getTime();
+      return Math.round(diff / 86400000);
+    }
+
+    function hashString(input: string) {
+      let hash = 2166136261;
+      for (let i = 0; i < input.length; i += 1) {
+        hash ^= input.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+      }
+      return hash >>> 0;
+    }
+
+    function seededPick<T>(arr: T[], seedValue: number) {
+      return arr[seedValue % arr.length];
+    }
+
+    function getDailyStory(dateKey: string) {
+      const char = seededPick(CHARACTERS, hashString(`${dateKey}:char`));
+      const genre = seededPick(GENRES, hashString(`${dateKey}:genre`));
+      const setting = seededPick(SETTINGS, hashString(`${dateKey}:setting`));
+      const hook = seededPick(HOOKS, hashString(`${dateKey}:hook`));
+      return { char, genre, setting, hook };
+    }
+
+    function toText(item: any) {
+      return `${item.char.name}，${item.setting.name}，${item.hook}。`;
+    }
+
+    function sanitizeItem(item: any) {
+      if (!item?.char?.name || !item?.genre?.name || !item?.setting?.name || !item?.hook) return null;
+      return {
+        char: {
+          name: item.char.name,
+          tag: item.char.tag || '',
+        },
+        genre: {
+          name: item.genre.name,
+          mood: item.genre.mood || '',
+          color: item.genre.color || '#ffa110',
+        },
+        setting: {
+          name: item.setting.name,
+        },
+        hook: item.hook,
+      };
+    }
+
+    function downloadFile(filename: string, content: string, type: string) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
     let currentText = INITIAL_TEXT;
+    let currentItem = sanitizeItem(INITIAL_ITEM) || generate();
     const seen = new Set<string>();
+    let favorites = readStorage<any[]>(STORAGE_KEYS.favorites, []).map(sanitizeItem).filter(Boolean);
 
     function render(item: ReturnType<typeof generate>) {
+      currentItem = sanitizeItem(item) || currentItem;
       const key = makeKey(item);
       if (seen.has(key)) return;
       seen.add(key);
       if (seen.size > 100) seen.clear();
 
-      currentText = `${item.char.name}，${item.setting.name}，${item.hook}。`;
+      currentText = toText(item);
 
       const premiseText = document.getElementById('premiseText')!;
       const genreBadge = document.getElementById('genreBadge')!;
@@ -294,7 +421,106 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
         charTag.textContent = `#${item.char.tag}`;
         premiseText.style.opacity = '1';
         premiseText.style.transform = 'translateY(0)';
+        syncFavoriteState();
       }, 150);
+    }
+
+    function syncFavoriteState() {
+      const btn = document.getElementById('favoriteBtn');
+      const status = document.getElementById('favoriteStatus');
+      if (!btn || !status || !currentItem) return;
+      const saved = favorites.some((item) => makeKey(item) === makeKey(currentItem));
+      btn.setAttribute('aria-pressed', saved ? 'true' : 'false');
+      btn.classList.toggle('active', saved);
+      status.textContent = saved ? '已收藏到本地' : '未收藏';
+    }
+
+    function renderFavorites() {
+      const list = document.getElementById('favoritesList');
+      const empty = document.getElementById('favoritesEmpty');
+      const summary = document.getElementById('favoritesSummary');
+      if (!list || !empty || !summary) return;
+
+      summary.textContent = `${favorites.length} 条已保存`;
+      empty.hidden = favorites.length > 0;
+      list.innerHTML = favorites.map((item, index) => `
+        <article class="favorite-item" data-favorite-index="${index}">
+          <div class="favorite-item-top">
+            <span class="gallery-genre" style="color: ${item.genre.color}">${item.genre.name}</span>
+            <div class="favorite-item-actions">
+              <button class="mini-btn" data-action="load">恢复</button>
+              <button class="mini-btn danger" data-action="remove">删除</button>
+            </div>
+          </div>
+          <p>${toText(item)}</p>
+        </article>
+      `).join('');
+      syncFavoriteState();
+    }
+
+    function saveFavorites() {
+      writeStorage(STORAGE_KEYS.favorites, favorites);
+      renderFavorites();
+    }
+
+    function toggleFavorite() {
+      if (!currentItem) return;
+      const key = makeKey(currentItem);
+      const existingIndex = favorites.findIndex((item) => makeKey(item) === key);
+      if (existingIndex >= 0) {
+        favorites.splice(existingIndex, 1);
+      } else {
+        favorites = [currentItem, ...favorites];
+      }
+      saveFavorites();
+    }
+
+    function updateDailyStory() {
+      const today = isoToday();
+      const daily = getDailyStory(today);
+      const dailyStoryText = document.getElementById('dailyStoryText');
+      if (dailyStoryText) dailyStoryText.textContent = toText(daily);
+    }
+
+    function runStreak() {
+      const today = isoToday();
+      const streakCard = document.getElementById('streakCard');
+      const streakCount = document.getElementById('streakCount');
+      const streakHint = document.getElementById('streakHint');
+      const saved = readStorage(STORAGE_KEYS.streak, {
+        count: 0,
+        lastVisit: '',
+        milestones: [] as number[],
+      });
+
+      let count = saved.count || 0;
+      if (!saved.lastVisit) {
+        count = 1;
+      } else {
+        const delta = daysBetween(saved.lastVisit, today);
+        if (delta === 1) count += 1;
+        if (delta > 1) count = 1;
+      }
+
+      const milestones = Array.isArray(saved.milestones) ? saved.milestones : [];
+      const isMilestone = (count === 7 || count === 30) && !milestones.includes(count);
+      const nextState = {
+        count,
+        lastVisit: today,
+        milestones: isMilestone ? [...milestones, count] : milestones,
+      };
+
+      writeStorage(STORAGE_KEYS.streak, nextState);
+
+      if (streakCount) streakCount.textContent = String(count);
+      if (streakHint) {
+        streakHint.textContent = isMilestone
+          ? `连续 ${count} 天，继续保持这个写作节奏。`
+          : count > 1
+            ? `你已经连续 ${count} 天打开 Story Spark。`
+            : '今天第一次访问，开始积累灵感习惯。';
+      }
+      if (streakCard) streakCard.classList.toggle('celebrate', isMilestone);
     }
 
     function refreshGallery() {
@@ -312,6 +538,10 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
     document.getElementById('generateBtn')?.addEventListener('click', () => {
       render(generate());
       refreshGallery();
+    });
+
+    document.getElementById('favoriteBtn')?.addEventListener('click', () => {
+      toggleFavorite();
     });
 
     document.getElementById('copyBtn')?.addEventListener('click', () => {
@@ -353,9 +583,79 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
         refreshGallery();
       }
     });
+
+    document.getElementById('favoritesToggle')?.addEventListener('click', () => {
+      const panel = document.getElementById('favoritesPanel');
+      const toggle = document.getElementById('favoritesToggle');
+      if (!panel || !toggle) return;
+      const expanded = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!expanded));
+      panel.hidden = expanded;
+    });
+
+    document.getElementById('favoritesList')?.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement;
+      const button = target.closest('[data-action]') as HTMLElement | null;
+      const item = target.closest('[data-favorite-index]') as HTMLElement | null;
+      if (!button || !item) return;
+      const index = Number(item.dataset.favoriteIndex);
+      if (Number.isNaN(index) || !favorites[index]) return;
+
+      if (button.dataset.action === 'load') {
+        render(favorites[index]);
+      }
+      if (button.dataset.action === 'remove') {
+        favorites.splice(index, 1);
+        saveFavorites();
+      }
+    });
+
+    document.getElementById('exportFavoritesBtn')?.addEventListener('click', () => {
+      downloadFile(
+        `story-spark-favorites-${isoToday()}.json`,
+        JSON.stringify(favorites, null, 2),
+        'application/json'
+      );
+    });
+
+    document.getElementById('importFavoritesBtn')?.addEventListener('click', () => {
+      document.getElementById('importFavoritesInput')?.click();
+    });
+
+    document.getElementById('importFavoritesInput')?.addEventListener('change', async (event) => {
+      const input = event.currentTarget as HTMLInputElement;
+      const file = input.files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        if (!Array.isArray(parsed)) throw new Error('Invalid favorites payload');
+        const imported = parsed.map(sanitizeItem).filter(Boolean);
+        const merged = [...favorites, ...imported].reduce((acc: any[], item) => {
+          if (!acc.some((existing) => makeKey(existing) === makeKey(item))) acc.push(item);
+          return acc;
+        }, []);
+        favorites = merged;
+        saveFavorites();
+      } catch {
+        const empty = document.getElementById('favoritesEmpty');
+        if (empty) {
+          empty.hidden = false;
+          empty.textContent = '导入失败，请检查 JSON 格式是否正确。';
+        }
+      } finally {
+        input.value = '';
+      }
+    });
+
+    updateDailyStory();
+    runStreak();
+    renderFavorites();
+    syncFavoriteState();
   </script>
 
-  <style>
+  <style is:inline>
     /* ═══════════════════════════════════════════
        MISTRAL DESIGN TOKENS — WARM GOLDEN UNIVERSE
     ═══════════════════════════════════════════ */
@@ -474,6 +774,73 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       color: var(--text-muted);
       letter-spacing: 0.12em;
       margin-bottom: 2.5rem;
+    }
+
+    .daily-strip {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .daily-story-card,
+    .streak-card {
+      background: linear-gradient(180deg, rgba(46, 32, 9, 0.92), rgba(26, 18, 6, 0.96));
+      border: 1px solid rgba(255, 161, 16, 0.16);
+      padding: 1rem 1.1rem;
+      text-align: left;
+      min-height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .daily-story-card::before,
+    .streak-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(255, 217, 0, 0.14), transparent 45%);
+      pointer-events: none;
+    }
+
+    .mini-label {
+      font-size: 0.58rem;
+      font-weight: 800;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 0.55rem;
+      position: relative;
+    }
+
+    .daily-story-card p,
+    .streak-card p {
+      position: relative;
+      color: var(--text-secondary);
+      font-size: 0.72rem;
+      line-height: 1.8;
+    }
+
+    .streak-value {
+      position: relative;
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: var(--yellow);
+      line-height: 1;
+      margin-bottom: 0.55rem;
+    }
+
+    .streak-card.celebrate {
+      animation: streak-burst 1.1s ease;
+      border-color: rgba(255, 217, 0, 0.5);
+      box-shadow: 0 0 0 1px rgba(255, 217, 0, 0.12), 0 0 28px rgba(255, 161, 16, 0.24);
+    }
+
+    @keyframes streak-burst {
+      0% { transform: scale(1); }
+      30% { transform: scale(1.04); }
+      60% { transform: scale(0.99); }
+      100% { transform: scale(1); }
     }
 
     .hero-stats {
@@ -610,6 +977,44 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       letter-spacing: 0.01em;
       margin: 0;
       transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .premise-meta {
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(127, 99, 21, 0.18);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .btn-favorite {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: transparent;
+      border: 1px solid rgba(127, 99, 21, 0.3);
+      color: var(--text-secondary);
+      padding: 0.55rem 0.85rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .btn-favorite:hover,
+    .btn-favorite.active {
+      border-color: rgba(255, 217, 0, 0.45);
+      color: var(--yellow);
+      background: rgba(255, 217, 0, 0.08);
+    }
+
+    .premise-status {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
     }
 
     /* ═══════════════════════════════════════════
@@ -878,6 +1283,110 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       margin-bottom: 3rem;
     }
 
+    .favorites-section {
+      margin-bottom: 3rem;
+    }
+
+    .favorites-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.1rem;
+      background: var(--dark-surface);
+      border: 1px solid rgba(127, 99, 21, 0.24);
+      color: var(--text-primary);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+    }
+
+    .favorites-summary {
+      color: var(--text-muted);
+      font-size: 0.66rem;
+      font-weight: 600;
+    }
+
+    .favorites-panel {
+      border: 1px solid rgba(127, 99, 21, 0.18);
+      border-top: none;
+      background: rgba(36, 26, 8, 0.88);
+      padding: 1rem;
+    }
+
+    .favorites-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .panel-btn,
+    .mini-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(127, 99, 21, 0.28);
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 0.5rem 0.8rem;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .panel-btn:hover,
+    .mini-btn:hover {
+      border-color: rgba(255, 217, 0, 0.4);
+      color: var(--yellow);
+      background: rgba(255, 217, 0, 0.06);
+    }
+
+    .mini-btn.danger:hover {
+      border-color: rgba(248, 113, 113, 0.5);
+      color: #fca5a5;
+      background: rgba(248, 113, 113, 0.08);
+    }
+
+    .favorites-empty {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .favorites-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .favorite-item {
+      border: 1px solid rgba(127, 99, 21, 0.18);
+      background: var(--dark-surface);
+      padding: 0.95rem 1rem;
+    }
+
+    .favorite-item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .favorite-item-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .favorite-item p {
+      font-size: 0.78rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+    }
+
     .why-grid {
       display: flex;
       flex-direction: column;
@@ -1001,9 +1510,22 @@ const initialText = `${initial.char.name}，${initial.setting.name}，${initial.
       .hero {
         padding: 3.5rem 0 2rem;
       }
+      .daily-strip {
+        grid-template-columns: 1fr;
+      }
       .hero-stats {
         flex-wrap: wrap;
         gap: 0.4rem;
+      }
+      .premise-meta,
+      .favorite-item-top,
+      .favorites-actions {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .panel-btn,
+      .mini-btn {
+        width: 100%;
       }
       .use-case-grid {
         grid-template-columns: 1fr;
